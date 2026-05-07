@@ -644,18 +644,19 @@ def generatePlotTypes():
     plotTypes = plotgen.generatePlotsByRegion(regions)
     
     # ENFORCE LAND EDGES
-    # We iterate through the final plot array and force edges to PLOT_LAND
-    iW = m.getGridWidth()
-    iH = m.getGridHeight()
-    for x in range(iW):
-        for y in range(iH):
-            if x == 0 or x == iW - 1 or y == 0 or y == iH - 1:
-                i = y * iW + x
-                # If it's water or a peak, force it to be flat or hill
-                if plotTypes[i] == PlotTypes.PLOT_OCEAN:
-                    plotTypes[i] = PlotTypes.PLOT_LAND
-                if plotTypes[i] == PlotTypes.PLOT_PEAK:
-                    plotTypes[i] = PlotTypes.PLOT_HILLS
+    if geography_opt != 3: # Not Hourglass
+        # We iterate through the final plot array and force edges to PLOT_LAND
+        iW = m.getGridWidth()
+        iH = m.getGridHeight()
+        for x in range(iW):
+            for y in range(iH):
+                if x == 0 or x == iW - 1 or y == 0 or y == iH - 1:
+                    i = y * iW + x
+                    # If it's water or a peak, force it to be flat or hill
+                    if plotTypes[i] == PlotTypes.PLOT_OCEAN:
+                        plotTypes[i] = PlotTypes.PLOT_LAND
+                    if plotTypes[i] == PlotTypes.PLOT_PEAK:
+                        plotTypes[i] = PlotTypes.PLOT_HILLS
 
     
     return plotTypes
@@ -910,8 +911,8 @@ class ResourceManager:
                     for dy in range(-6, 7):
                         dist = plotDistance(originX, originY, originX + dx, originY + dy)
                         
-                        # We want it roughly 5 tiles away (allow 4 to 6 for flexibility)
-                        if dist >= 4 and dist <= 6:
+                        # We want it roughly 5 tiles away (allow 3 to 5 for flexibility)
+                        if dist >= 3 and dist <= 5:
                             pPlot = self.map.plot(originX + dx, originY + dy)
                             
                             if pPlot.isNone(): continue
