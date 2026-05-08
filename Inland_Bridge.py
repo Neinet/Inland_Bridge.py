@@ -16,8 +16,9 @@ import CvMapGeneratorUtil
 import sys
 from CvMapGeneratorUtil import MultilayeredFractal
 import math
+from CvMapGeneratorUtil import BonusBalancer
+balancer = BonusBalancer()
 
-hinted_world = None
 # Cache for starting plots
 _START_PLOT_MAP = None
 
@@ -37,8 +38,12 @@ def isAdvancedMap():
     "This map should show up in simple mode"
     return 1
 
+def isSeaLevelMap():
+    return 0
+
+
 def getNumCustomMapOptions():
-    return 7
+    return 9
 
 def getCustomMapOptionName(argsList):
     [iOption] = argsList
@@ -56,6 +61,10 @@ def getCustomMapOptionName(argsList):
         return "Islands"
     elif iOption == 6:
         return "Geography"
+    elif iOption == 7:
+        return "World Wrap"
+    elif iOption == 8:
+        return "Resources"
     return ""
 
 def getNumCustomMapOptionValues(argsList):
@@ -67,6 +76,8 @@ def getNumCustomMapOptionValues(argsList):
     elif iOption == 4: return 2 # Semistrategic resources
     elif iOption == 5: return 2 # 
     elif iOption == 6: return 3 # 
+    elif iOption == 7: return 3 # 
+    elif iOption == 8: return 2 # 
     return 0
 
 def getCustomMapOptionDescAt(argsList):
@@ -94,6 +105,13 @@ def getCustomMapOptionDescAt(argsList):
         if iSelection == 0: return "Two Seas"
         elif iSelection == 1: return "Infinity"
         return "Hourglass"
+    elif iOption == 7: # Wrap
+        if iSelection == 0: return "Flat"
+        elif iSelection == 1: return "Wrap X"
+        return "Wrap X & Y"
+    elif iOption == 8: # Resource
+        if iSelection == 0: return "Standard"
+        return "Balanced"
     return ""
 
 def getCustomMapOptionDefault(argsList):
@@ -111,6 +129,10 @@ def getCustomMapOptionDefault(argsList):
     elif iOption == 5: # Islands: On
         return 1
     elif iOption == 6: # Geography: Two Seas
+        return 0
+    elif iOption == 7: # Wrap
+        return 0
+    elif iOption == 8: # Resources
         return 0
     return 0
 
@@ -356,9 +378,13 @@ def minStartingDistanceModifier():
 # Map Properties
 ########################################
 def getWrapX():
-    return False
+	map = CyMap()
+	return (map.getCustomMapOption(7) == 1 or map.getCustomMapOption(7) == 2)
+
 def getWrapY():
-    return False
+	map = CyMap()
+	return (map.getCustomMapOption(7) == 2)
+    
 
 def getTopLatitude():
     return 60
@@ -394,13 +420,10 @@ def getGridSize(argsList):
     return grid_sizes[eWorldSize]
 
 
+
 ########################################
 # Plot Generation
 ########################################
-# Subclasses to fix the FRAC_POLAR zero row bugs.
-# -----------------------------------------------------------------------------
-# GeometricMultiFractal Generator
-# -----------------------------------------------------------------------------
 class GeometricMultiFractal(CvMapGeneratorUtil.MultilayeredFractal):
     """
     Fractal generator supporting geometric masking and rotation.
@@ -644,7 +667,7 @@ def generatePlotTypes():
     plotTypes = plotgen.generatePlotsByRegion(regions)
     
     # ENFORCE LAND EDGES
-    if geography_opt != 3: # Not Hourglass
+    if geography_opt != 2: # Not Hourglass
         # We iterate through the final plot array and force edges to PLOT_LAND
         iW = m.getGridWidth()
         iH = m.getGridHeight()
@@ -661,7 +684,40 @@ def generatePlotTypes():
     
     return plotTypes
 
+# -----------------------------------------------------------------------------
+# Coast distance
+# -----------------------------------------------------------------------------
+def expandCoastToTwoTiles():
+    """Convert all water tiles within 2 tiles of land to coast terrain. (For certain regional maps)"""
+    map = CyMap()
+    gc = CyGlobalContext()
+    iW = map.getGridWidth()
+    iH = map.getGridHeight()
+    coast_id = gc.getInfoTypeForString("TERRAIN_COAST")
 
+    # Collect all land plots
+    land_plots = []
+    for x in range(iW):
+        for y in range(iH):
+            if not map.plot(x, y).isWater():
+                land_plots.append((x, y))
+
+    # Mark water plots within Manhattan distance <= 2 of any land
+    coast_plots = set()
+    for lx, ly in land_plots:
+        for dx in range(-2, 3):
+            for dy in range(-2, 3):
+                if abs(dx) + abs(dy) <= 2:   # Manhattan distance
+                    nx, ny = lx + dx, ly + dy
+                    if 0 <= nx < iW and 0 <= ny < iH:
+                        pPlot = map.plot(nx, ny)
+                        if pPlot.isWater():
+                            coast_plots.add((nx, ny))
+
+    # Apply coast terrain
+    for x, y in coast_plots:
+        map.plot(x, y).setTerrainType(coast_id, True, True)
+        
 ########################################
 # Terrain & Feature Generation
 ########################################
@@ -811,12 +867,14 @@ def getRiverAltitude(argsList):
     # The X-axis gradient (30) is now much steeper than the Y-axis gradient (10).
     # This forces rivers to "fall" into the sea rather than running parallel to the shore.
     return ((abs(iX - iCenterX) * 15) + (abs(iY - iCenterY) * 10))
-    
+
+# -----------------------------------------------------------------------------
+# Normalization overrides
+# -----------------------------------------------------------------------------
+
 ########################################
 # Custom Resource Options
 ########################################
-
-
 class ResourceManager:
     def __init__(self, map_obj, gc, dice):
         self.map = map_obj
@@ -950,18 +1008,22 @@ class ResourceManager:
                     self.engine.addSign(bestPlot, -1, "Balanced " + bonus_name)
                     placed += 1
 
+
 def normalizeAddExtras():
     gc = CyGlobalContext()
     map = CyMap()
     dice = gc.getGame().getMapRand()
     # Recalculate to ensure accurate terrain/water detection
     map.recalculateAreas()
-    
     # Instantiate the Generalized Manager
     rm = ResourceManager(map, gc, dice)
     
-    # Handle Ivory Option (Option 4)
+    iResourceOption = map.getCustomMapOption(8)
     iSemiStrategicOption = map.getCustomMapOption(4)
+    
+    # Vanilla balancing option
+    if iResourceOption ==1:
+        balancer.normalizeAddExtras()
     
     # bTeamPlacement is our global variable from the start plot logic
     if bTeamPlacement and iSemiStrategicOption == 0:
@@ -977,5 +1039,4 @@ def normalizeAddExtras():
 
     # Finalize by calling the engine's default extras (like Goody Huts)
     CyPythonMgr().allowDefaultImpl()
-
 
