@@ -2,7 +2,9 @@
 A Civilization IV mapscript based on Inland_Sea.py.
 Features a center bridge splitting the sea into two, as well as several multiplayer-friendly customizations.
 
-![StandardSizeThumb](standard_4v4.png)
+![StandardSizeThumb](two_seas.png)
+![StandardSizeThumb](infinity.png)
+![StandardSizeThumb](hourglass.png)
 
 # Features
 ## Map Options
