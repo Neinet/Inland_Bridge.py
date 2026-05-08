@@ -397,21 +397,21 @@ def getGridSize(argsList):
     AspectRatioOption = map.getCustomMapOption(0)
     if AspectRatioOption == 0: # 16:10
         grid_sizes = {
-            WorldSizeTypes.WORLDSIZE_DUEL:      (6,4),
-            WorldSizeTypes.WORLDSIZE_TINY:      (8,5),
-            WorldSizeTypes.WORLDSIZE_SMALL:     (10,6),
-            WorldSizeTypes.WORLDSIZE_STANDARD:  (12,7),
-            WorldSizeTypes.WORLDSIZE_LARGE:     (13,8),
-            WorldSizeTypes.WORLDSIZE_HUGE:      (15,9)
+            WorldSizeTypes.WORLDSIZE_DUEL:      (7,4),
+            WorldSizeTypes.WORLDSIZE_TINY:      (10,6),
+            WorldSizeTypes.WORLDSIZE_SMALL:     (12,7),
+            WorldSizeTypes.WORLDSIZE_STANDARD:  (13,8),
+            WorldSizeTypes.WORLDSIZE_LARGE:     (15,9),
+            WorldSizeTypes.WORLDSIZE_HUGE:      (16,10),
         }
     else: # 4:3
         grid_sizes = {
             WorldSizeTypes.WORLDSIZE_DUEL:      (6,4),
             WorldSizeTypes.WORLDSIZE_TINY:      (8,6),
-            WorldSizeTypes.WORLDSIZE_SMALL:     (9,7),
-            WorldSizeTypes.WORLDSIZE_STANDARD:  (10,8),
-            WorldSizeTypes.WORLDSIZE_LARGE:     (11,9),
-            WorldSizeTypes.WORLDSIZE_HUGE:      (13,10)
+            WorldSizeTypes.WORLDSIZE_SMALL:     (10,8),
+            WorldSizeTypes.WORLDSIZE_STANDARD:  (11,9),
+            WorldSizeTypes.WORLDSIZE_LARGE:     (13,10),
+            WorldSizeTypes.WORLDSIZE_HUGE:      (15,11),
         }
 
     if (argsList[0] == -1): # (-1,) is passed to function on loads
@@ -688,7 +688,7 @@ def generatePlotTypes():
 # Coast distance
 # -----------------------------------------------------------------------------
 def expandCoastToTwoTiles():
-    """Convert all water tiles within 2 tiles of land to coast terrain. (For certain regional maps)"""
+    """Convert all water tiles within a BFC (Big Fat Cross) radius of land to coast."""
     map = CyMap()
     gc = CyGlobalContext()
     iW = map.getGridWidth()
@@ -702,17 +702,24 @@ def expandCoastToTwoTiles():
             if not map.plot(x, y).isWater():
                 land_plots.append((x, y))
 
-    # Mark water plots within Manhattan distance <= 2 of any land
+    # Mark water plots within BFC range
     coast_plots = set()
     for lx, ly in land_plots:
         for dx in range(-2, 3):
             for dy in range(-2, 3):
-                if abs(dx) + abs(dy) <= 2:   # Manhattan distance
-                    nx, ny = lx + dx, ly + dy
-                    if 0 <= nx < iW and 0 <= ny < iH:
-                        pPlot = map.plot(nx, ny)
-                        if pPlot.isWater():
-                            coast_plots.add((nx, ny))
+                # BFC Logic: Skip the four corner tiles of the 5x5 area
+                # (where both dx and dy are 2 or -2)
+                if abs(dx) == 2 and abs(dy) == 2:
+                    continue
+                
+                nx = lx + dx
+                ny = ly + dy
+                
+                # Check bounds
+                if 0 <= nx < iW and 0 <= ny < iH:
+                    pPlot = map.plot(nx, ny)
+                    if pPlot.isWater():
+                        coast_plots.add((nx, ny))
 
     # Apply coast terrain
     for x, y in coast_plots:
@@ -810,6 +817,7 @@ def addFeatures():
     NiTextOut("Adding Features (Python Inland Sea) ...")
     featuregen = ISFeatureGenerator()
     featuregen.addFeatures()
+    expandCoastToTwoTiles()
     return 0
 
 def getRiverStartCardinalDirection(argsList):
