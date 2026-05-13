@@ -1013,7 +1013,7 @@ class ResourceManager:
                         bestPlot.setFeatureType(FeatureTypes.NO_FEATURE, -1)
                     
                     # Add Debug Sign
-                    self.engine.addSign(bestPlot, -1, "Balanced " + bonus_name)
+                    # self.engine.addSign(bestPlot, -1, "Balanced " + bonus_name)
                     placed += 1
 
 
