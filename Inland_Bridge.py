@@ -31,19 +31,15 @@ def debugLog(msg):
 
 def getDescription():
     desc = "Inland_Sea.py with a center bridge and and multiplayer-friendly customizations."
-    desc += "Recommended sizes: Small for 3v3, Standard for 4v4."
+    desc += "Recommended sizes: Small for 4v4."
     return desc
 
 def isAdvancedMap():
     "This map should show up in simple mode"
     return 1
 
-def isSeaLevelMap():
-    return 0
-
-
 def getNumCustomMapOptions():
-    return 9
+    return 10
 
 def getCustomMapOptionName(argsList):
     [iOption] = argsList
@@ -56,7 +52,7 @@ def getCustomMapOptionName(argsList):
     elif iOption == 3:
         return "Team Start"
     elif iOption == 4:
-        return "Semi-Strategic Resource Balancing"
+        return "Teamer Bonus Balancing"
     elif iOption == 5:
         return "Islands"
     elif iOption == 6:
@@ -65,6 +61,8 @@ def getCustomMapOptionName(argsList):
         return "World Wrap"
     elif iOption == 8:
         return "Resources"
+    elif iOption == 9:
+        return "Debug Signs"
     return ""
 
 def getNumCustomMapOptionValues(argsList):
@@ -78,6 +76,7 @@ def getNumCustomMapOptionValues(argsList):
     elif iOption == 6: return 3 # 
     elif iOption == 7: return 3 # 
     elif iOption == 8: return 2 # 
+    elif iOption == 9: return 2 # Debug Signs
     return 0
 
 def getCustomMapOptionDescAt(argsList):
@@ -95,8 +94,8 @@ def getCustomMapOptionDescAt(argsList):
     elif iOption == 3: # Team Start
         if iSelection == 0: return "Start Together"
         return "Disabled"
-    elif iOption == 4: # SemiStrategic
-        if iSelection == 0: return "1/2 Ivory, Marble, Stone per Team Member"
+    elif iOption == 4: # TeamerBalancing
+        if iSelection == 0: return "Enabled"
         return "Disabled"
     elif iOption == 5: # Islands
         if iSelection == 0: return "Disabled"
@@ -112,6 +111,9 @@ def getCustomMapOptionDescAt(argsList):
     elif iOption == 8: # Resource
         if iSelection == 0: return "Standard"
         return "Balanced"
+    elif iOption == 9: # Debug Signs
+        if iSelection == 0: return "Disabled"
+        return "Enabled"
     return ""
 
 def getCustomMapOptionDefault(argsList):
@@ -124,7 +126,7 @@ def getCustomMapOptionDefault(argsList):
         return 1
     elif iOption == 3: # Team Start: 
         return 0
-    elif iOption == 4: # SemiStrategic: 1/2 per player
+    elif iOption == 4: # TeamerBalancing
         return 0
     elif iOption == 5: # Islands: On
         return 1
@@ -134,6 +136,8 @@ def getCustomMapOptionDefault(argsList):
         return 0
     elif iOption == 8: # Resources
         return 0
+    elif iOption == 9: # Debug Signs
+        return 1
     return 0
 
 ########################################
@@ -575,6 +579,12 @@ def generatePlotTypes():
     peak_opt = m.getCustomMapOption(1)
     geography_opt = m.getCustomMapOption(6)
     island_opt = m.getCustomMapOption(5)
+    iRawSeaLevelChange = gc.getSeaLevelInfo(m.getSeaLevel()).getSeaLevelChange()
+    fSeaSizeChange = 0.0
+    if iRawSeaLevelChange > 0:
+        fSeaSizeChange = 0.06
+    elif iRawSeaLevelChange < 0:
+        fSeaSizeChange = -0.08
     
     regions = []
     additional_regions = []
@@ -599,9 +609,9 @@ def generatePlotTypes():
         # Name, Type, CX, CY, W, H, Angle, Terrain, Grain, Hills, Water%
         additional_regions = [
             ("Ellipse_Sea_R_BG", "Ellipse", 0.730, 0.500, 0.3, 0.4, 0, "water", BalanceGrain, BalanceGrain, 100),
-            ("Ellipse_Sea_R", "Ellipse", 0.730, 0.5, 0.4, 0.5, 0, "water", BalanceGrain, BalanceGrain, 70),
+            ("Ellipse_Sea_R", "Ellipse", 0.730, 0.5, 0.4 + fSeaSizeChange, 0.5 + fSeaSizeChange, 0, "water", BalanceGrain, BalanceGrain, 70),
             ("Ellipse_Sea_L_BG", "Ellipse", 0.270, 0.500, 0.3, 0.4, 0, "water", BalanceGrain, BalanceGrain, 100),
-            ("Ellipse_Sea_L", "Ellipse", 0.270, 0.5, 0.4, 0.5, 0, "water", BalanceGrain, BalanceGrain, 70),
+            ("Ellipse_Sea_L", "Ellipse", 0.270, 0.5, 0.4 + fSeaSizeChange, 0.5 + fSeaSizeChange, 0, "water", BalanceGrain, BalanceGrain, 70),
             ("Bridge", "Ellipse", 0.500, 0.500, 0.170, 0.200, 0, "default", GatherGrain, ScatterGrain, 10),
         ]
         if island_opt == 1: # Enabled
@@ -617,8 +627,8 @@ def generatePlotTypes():
         additional_regions = [
             ("Ellipse_Sea_R_BG", "Ellipse", 0.730, 0.500, 0.3, 0.4, 0, "water", BalanceGrain, BalanceGrain, 100),
             ("Ellipse_Sea_L_BG", "Ellipse", 0.270, 0.500, 0.3, 0.4, 0, "water", BalanceGrain, BalanceGrain, 100),
-            ("Ellipse_Sea_R", "Ellipse", 0.730, 0.500, 0.375, 0.650, 0, "water", BalanceGrain, BalanceGrain, 70),
-            ("Ellipse_Sea_L", "Ellipse", 0.270, 0.500, 0.375, 0.650, 0, "water", BalanceGrain, BalanceGrain, 70),
+            ("Ellipse_Sea_R", "Ellipse", 0.730, 0.500, 0.375 + fSeaSizeChange, 0.650 + fSeaSizeChange, 0, "water", BalanceGrain, BalanceGrain, 70),
+            ("Ellipse_Sea_L", "Ellipse", 0.270, 0.500, 0.375 + fSeaSizeChange, 0.650 + fSeaSizeChange, 0, "water", BalanceGrain, BalanceGrain, 70),
             ("Bridge", "Ellipse", 0.500, 0.500, 0.170, 0.200, 0, "water", GatherGrain, BalanceGrain, 90),
         ]
         if island_opt == 1: # Enabled
@@ -630,8 +640,8 @@ def generatePlotTypes():
     else: # Hourglass
         # Name, Type, CX, CY, W, H, Angle, Terrain, Grain, Hills, Water%
         additional_regions = [
-            ("Ellipse_SeaL", "Ellipse", 0.95, 0.500, 0.500, 0.850, 0, "water", BalanceGrain, BalanceGrain, 90),
-            ("Ellipse_SeaR", "Ellipse", 0.050, 0.500, 0.500, 0.850, 0, "water", BalanceGrain, BalanceGrain, 90),
+            ("Ellipse_Sea_L", "Ellipse", 0.95, 0.500, 0.500 + fSeaSizeChange, 0.850 + fSeaSizeChange, 0, "water", BalanceGrain, BalanceGrain, 90),
+            ("Ellipse_Sea_R", "Ellipse", 0.050, 0.500, 0.500 + fSeaSizeChange, 0.850 + fSeaSizeChange, 0, "water", BalanceGrain, BalanceGrain, 90),
             ("Ellipse_small_seaL", "Ellipse", 0.250, 0.500, 0.300, 0.400, 0, "water", BalanceGrain, BalanceGrain, 85),
             ("Ellipse_small_seaR", "Ellipse", 0.750, 0.500, 0.300, 0.400, 0, "water", BalanceGrain, BalanceGrain, 85),
         ]
@@ -813,6 +823,19 @@ class ISFeatureGenerator(CvMapGeneratorUtil.FeatureGenerator):
         lat = 0.03 + 0.60 * lat
         return lat
 
+    def getForestVarietyAtPlot(self, iX, iY):
+        lat = self.getLatitudeAtPlot(iX, iY)
+        if lat < 0.40:
+            return 0
+        if lat >= 0.55:
+            return 2
+        return 1
+
+    def addForestsAtPlot(self, pPlot, iX, iY, lat):
+        if pPlot.canHaveFeature(self.featureForest):
+            if self.forests.getHeight(iX, iY) >= self.iForestLevel:
+                pPlot.setFeatureType(self.featureForest, self.getForestVarietyAtPlot(iX, iY))
+
 def addFeatures():
     NiTextOut("Adding Features (Python Inland Sea) ...")
     featuregen = ISFeatureGenerator()
@@ -891,9 +914,38 @@ class ResourceManager:
         self.engine = CyEngine()
         self.iW = map_obj.getGridWidth()
         self.iH = map_obj.getGridHeight()
+        self.bDebugSignsEnabled = (map_obj.getCustomMapOption(9) == 1)
 
     def _bonus_id(self, name):
         return self.gc.getInfoTypeForString(name)
+
+    def _bonus_name_from_id(self, iBonus):
+        return self.gc.getBonusInfo(iBonus).getType()
+
+    def _debug_sign(self, pPlot, msg):
+        if not self.bDebugSignsEnabled: return
+        if pPlot is None: return
+        if pPlot.isNone(): return
+        self.engine.addSign(pPlot, -1, msg)
+
+    def _shuffle_list(self, source_list, log_label):
+        shuffled = []
+        for item in source_list:
+            shuffled.append(item)
+
+        for i in range(len(shuffled)):
+            j = self.dice.get(len(shuffled), log_label)
+            temp = shuffled[i]
+            shuffled[i] = shuffled[j]
+            shuffled[j] = temp
+
+        return shuffled
+
+    def _bonus_ids_from_names(self, bonusNames):
+        bonusIDs = []
+        for bonusName in bonusNames:
+            bonusIDs.append(self._bonus_id(bonusName))
+        return bonusIDs
 
     def swap_resources(self, target_name, replace_name):
         """Globally replaces target with replace, or removes if None."""
@@ -906,115 +958,204 @@ class ResourceManager:
             pPlot = self.map.plotByIndex(i)
             if pPlot.getBonusType(-1) == iTarget:
                 pPlot.setBonusType(iReplace)
-                # Place Debug Sign
-                # msg = "Swapped: " + str(target_name)
-                # if replace_name: msg += " -> " + str(replace_name)
-                # self.engine.addSign(pPlot, -1, msg)
 
-    def place_balanced_team_resource(self, bonus_name):
-        """Places resources near a random team member's starting plot."""
-        global _START_PLOT_MAP, teamHalfMap
-        
-        if _START_PLOT_MAP is None:
-            return # Safety check
+    def _get_player_count_for_team(self, iTeam):
+        iCount = 0
+        for iPlayer in range(self.gc.getMAX_CIV_PLAYERS()):
+            pPlayer = self.gc.getPlayer(iPlayer)
+            if pPlayer.isEverAlive() and pPlayer.getTeam() == iTeam:
+                iCount += 1
+        return iCount
 
-        iBonus = self._bonus_id(bonus_name)
-        
-        # 1. Group starting plot coordinates by Team
-        teamStartPlots = {}
-        teamSizes = {}
-        for pID, plotIdx in _START_PLOT_MAP.items():
-            pPlayer = self.gc.getPlayer(pID)
-            if pPlayer.isEverAlive():
-                tID = pPlayer.getTeam()
-                if not teamStartPlots.has_key(tID):
-                    teamStartPlots[tID] = []
-                    teamSizes[tID] = 0
-                
-                pStartPlot = self.map.plotByIndex(plotIdx)
-                teamStartPlots[tID].append((pStartPlot.getX(), pStartPlot.getY()))
-                teamSizes[tID] += 1
+    def _get_team_region_plots(self, iTeam):
+        global teamHalfMap, northThreshold, southThreshold
 
-        # 2. Iterate through teams assigned in beforeGeneration
-        sortedTeams = teamHalfMap.keys()
-        sortedTeams.sort()
+        plots = []
+        if not teamHalfMap.has_key(iTeam):
+            return plots
 
-        for tID in sortedTeams:
-            if not teamStartPlots.has_key(tID): continue
-            
-            # Determine how many to place (1 per 2 players, min 1)
-            count = teamSizes[tID] / 2
-            if count < 1: count = 1
-            
-            placed = 0
-            # Get the list of start plots for this team
-            memberPlots = teamStartPlots[tID]
-            
-            # We shuffle the list of member plots so that if we need to place 
-            # multiple bonuses, they are distributed among different members.
-            shuffledPlots = []
-            for p in memberPlots: shuffledPlots.append(p)
-            
-            # Simple shuffle for Python 2.4
-            for i in range(len(shuffledPlots)):
-                j = self.dice.get(len(shuffledPlots), "Member Shuffle")
-                temp = shuffledPlots[i]
-                shuffledPlots[i] = shuffledPlots[j]
-                shuffledPlots[j] = temp
+        region = teamHalfMap[iTeam]
+        iWest = 0
+        iEast = self.iW
+        iSouth = 0
+        iNorth = self.iH
 
-            # 3. Placement Loop
-            for i in range(count):
-                # Pick a member's plot (loop back if more resources than members)
-                originCoords = shuffledPlots[i % len(shuffledPlots)]
-                originX, originY = originCoords
-                
-                bestPlot = None
-                bestValue = -1
-                
-                # Search in a box around the starting plot
-                # Distance 5 means looking 5 tiles out in all directions
-                for dx in range(-6, 7):
-                    for dy in range(-6, 7):
-                        dist = plotDistance(originX, originY, originX + dx, originY + dy)
-                        
-                        # We want it roughly 5 tiles away (allow 3 to 5 for flexibility)
-                        if dist >= 3 and dist <= 5:
-                            pPlot = self.map.plot(originX + dx, originY + dy)
-                            
-                            if pPlot.isNone(): continue
-                            if pPlot.isWater() or pPlot.isPeak(): continue
-                            if pPlot.getBonusType(-1) != -1: continue
-                            if pPlot.isStartingPlot(): continue
-                                
-                            # CRITICAL: Check if the tile already has a resource
-                            if pPlot.getBonusType(-1) != -1:
-                                continue
-                            
-                            # Check if it's a "natural" spot for this resource
-                            # This checks terrain/feature requirements
-                            val = 0
-                            if pPlot.canHaveBonus(iBonus, True):
-                                val = 100 + self.dice.get(100, "Resource Randomizer")
-                            else:
-                                # Forced placement candidate
-                                val = 10 + self.dice.get(50, "Resource Randomizer")
-                                
-                            if val > bestValue:
-                                bestValue = val
-                                bestPlot = pPlot
-                
-                # 4. Finalize Placement
-                if bestPlot is not None:
-                    bestPlot.setBonusType(iBonus)
-                    
-                    # If we forced it onto a bad tile (e.g. Ivory on Marsh), 
-                    # clear the feature so the resource is visible/usable
-                    if not bestPlot.canHaveBonus(iBonus, False):
-                        bestPlot.setFeatureType(FeatureTypes.NO_FEATURE, -1)
-                    
-                    # Add Debug Sign
-                    # self.engine.addSign(bestPlot, -1, "Balanced " + bonus_name)
-                    placed += 1
+        if region == 0:
+            iSouth = northThreshold
+        elif region == 1:
+            iNorth = southThreshold
+        elif region == 10:
+            iEast = int(self.iW * 0.3)
+            iNorth = int(self.iH * 0.3)
+        elif region == 11:
+            iWest = int(self.iW * 0.7)
+            iNorth = int(self.iH * 0.3)
+        elif region == 12:
+            iEast = int(self.iW * 0.3)
+            iSouth = int(self.iH * 0.7)
+        elif region == 13:
+            iWest = int(self.iW * 0.7)
+            iSouth = int(self.iH * 0.7)
+
+        for x in range(iWest, iEast):
+            for y in range(iSouth, iNorth):
+                pPlot = self.map.plot(x, y)
+                if pPlot.isNone(): continue
+                plots.append(pPlot)
+
+        return plots
+
+    def _present_bonus_types(self, region_plots, bonusIDs):
+        wanted = {}
+        for iBonus in bonusIDs:
+            wanted[iBonus] = 1
+
+        present = {}
+        for pPlot in region_plots:
+            iBonus = pPlot.getBonusType(-1)
+            if wanted.has_key(iBonus):
+                present[iBonus] = 1
+
+        return present.keys()
+
+    def _valid_bonus_plots(self, region_plots, iBonus):
+        validPlots = []
+        for pPlot in region_plots:
+            if pPlot.getBonusType(-1) != -1: continue
+            if pPlot.isStartingPlot(): continue
+            if not pPlot.canHaveBonus(iBonus, True): continue
+            validPlots.append(pPlot)
+        return validPlots
+
+    def _bonus_is_water(self, iBonus):
+        bonusInfo = self.gc.getBonusInfo(iBonus)
+        iCoast = self.gc.getInfoTypeForString("TERRAIN_COAST")
+        iOcean = self.gc.getInfoTypeForString("TERRAIN_OCEAN")
+
+        if iCoast != -1:
+            if bonusInfo.isTerrain(iCoast):
+                return True
+        if iOcean != -1:
+            if bonusInfo.isTerrain(iOcean):
+                return True
+        return False
+
+    def _bonus_matches_plot_type(self, pPlot, iBonus):
+        bonusInfo = self.gc.getBonusInfo(iBonus)
+
+        if self._bonus_is_water(iBonus):
+            return pPlot.isWater()
+
+        if pPlot.isWater() or pPlot.isPeak():
+            return False
+
+        if pPlot.isHills():
+            return bonusInfo.isHills()
+
+        return bonusInfo.isFlatlands()
+
+    def _fallback_bonus_plots(self, region_plots, iBonus, bMatchPlotType):
+        bWaterBonus = self._bonus_is_water(iBonus)
+        fallbackPlots = []
+        for pPlot in region_plots:
+            if pPlot.getBonusType(-1) != -1: continue
+            if pPlot.isStartingPlot(): continue
+            if bMatchPlotType:
+                if not self._bonus_matches_plot_type(pPlot, iBonus): continue
+            else:
+                if bWaterBonus:
+                    if not pPlot.isWater(): continue
+                else:
+                    if pPlot.isWater() or pPlot.isPeak(): continue
+            fallbackPlots.append(pPlot)
+        return fallbackPlots
+
+    def _place_bonus_copies(self, region_plots, iBonus, iCopies, regionName, bonusName, iPlayerCount):
+        if iCopies < 1: iCopies = 1
+
+        validPlots = self._valid_bonus_plots(region_plots, iBonus)
+        validPlots = self._shuffle_list(validPlots, "IB Region Bonus Placement")
+
+        placed = 0
+        for pPlot in validPlots:
+            if placed >= iCopies: break
+            pPlot.setBonusType(iBonus)
+            self._debug_sign(pPlot, "IB added " + bonusName + " in " + regionName + " P" + str(iPlayerCount))
+            placed += 1
+
+        if placed < iCopies:
+            print "IB using relaxed placement for %s in %s, valid plots exhausted" % (bonusName, regionName)
+            relaxedPlots = self._fallback_bonus_plots(region_plots, iBonus, True)
+            relaxedPlots = self._shuffle_list(relaxedPlots, "IB Relaxed Region Bonus Placement")
+            for pPlot in relaxedPlots:
+                if placed >= iCopies: break
+                pPlot.setBonusType(iBonus)
+                self._debug_sign(pPlot, "IB relaxed " + bonusName + " in " + regionName + " P" + str(iPlayerCount))
+                placed += 1
+
+        if placed < iCopies:
+            print "IB using last-ditch placement for %s in %s, relaxed plots exhausted" % (bonusName, regionName)
+            fallbackPlots = self._fallback_bonus_plots(region_plots, iBonus, False)
+            fallbackPlots = self._shuffle_list(fallbackPlots, "IB Last Ditch Region Bonus Placement")
+            for pPlot in fallbackPlots:
+                if placed >= iCopies: break
+                pPlot.setBonusType(iBonus)
+                self._debug_sign(pPlot, "IB fallback " + bonusName + " in " + regionName + " P" + str(iPlayerCount))
+                placed += 1
+
+        return placed
+
+    def place_balanced_team_resource(self, iTeam, bonusNames, iTargetCount, iCopies):
+        bonusIDs = self._bonus_ids_from_names(bonusNames)
+        region_plots = self._get_team_region_plots(iTeam)
+        regionName = "team " + str(iTeam)
+        iPlayerCount = self._get_player_count_for_team(iTeam)
+
+        if len(region_plots) == 0:
+            print "IB balance found no plots for %s" % regionName
+            return 0
+
+        present = self._present_bonus_types(region_plots, bonusIDs)
+        iPresent = len(present)
+
+        if iPresent > iTargetCount:
+            excess = self._shuffle_list(present, "IB Region Bonus Excess Types")
+            iRemoveCount = iPresent - iTargetCount
+            removeLookup = {}
+            for i in range(iRemoveCount):
+                removeLookup[excess[i]] = 1
+
+            for pPlot in region_plots:
+                iBonus = pPlot.getBonusType(-1)
+                if removeLookup.has_key(iBonus):
+                    self._debug_sign(pPlot, "IB removed " + self._bonus_name_from_id(iBonus) + " in " + regionName)
+                    pPlot.setBonusType(-1)
+
+            present = self._present_bonus_types(region_plots, bonusIDs)
+            return len(present)
+
+        if iPresent == iTargetCount:
+            return iPresent
+
+        presentLookup = {}
+        for iBonus in present:
+            presentLookup[iBonus] = 1
+
+        missing = []
+        for iBonus in bonusIDs:
+            if not presentLookup.has_key(iBonus):
+                missing.append(iBonus)
+
+        missing = self._shuffle_list(missing, "IB Region Bonus Missing Types")
+        iNeeded = iTargetCount - iPresent
+
+        for i in range(iNeeded):
+            if i >= len(missing): break
+            iBonus = missing[i]
+            self._place_bonus_copies(region_plots, iBonus, iCopies, regionName, self._bonus_name_from_id(iBonus), iPlayerCount)
+
+        present = self._present_bonus_types(region_plots, bonusIDs)
+        return len(present)
 
 
 def normalizeAddExtras():
@@ -1027,23 +1168,37 @@ def normalizeAddExtras():
     rm = ResourceManager(map, gc, dice)
     
     iResourceOption = map.getCustomMapOption(8)
-    iSemiStrategicOption = map.getCustomMapOption(4)
+    iTeamerBalancingOption = map.getCustomMapOption(4)
     
     # Vanilla balancing option
     if iResourceOption ==1:
         balancer.normalizeAddExtras()
     
     # bTeamPlacement is our global variable from the start plot logic
-    if bTeamPlacement and iSemiStrategicOption == 0:
-        print "PY: Balancing semi-strategic resources for Teams..."
+    if bTeamPlacement and iTeamerBalancingOption == 0:
+        print "PY: Teamer balancing regional resource groups..."
+        
         # 1. Global Swap
         rm.swap_resources("BONUS_IVORY", None)
         rm.swap_resources("BONUS_STONE", None)
         rm.swap_resources("BONUS_MARBLE", None)
-        # 2. Place Balanced: Bonus per team region
-        rm.place_balanced_team_resource("BONUS_IVORY")
-        rm.place_balanced_team_resource("BONUS_STONE")
-        rm.place_balanced_team_resource("BONUS_MARBLE")
+        rm.swap_resources("BONUS_GOLD", None)
+        # 2. Place Balanced: Bonus list per team region
+        CalendarBonus = ["BONUS_SPICES", "BONUS_SUGAR", "BONUS_BANANA", "BONUS_DYE", "BONUS_INCENSE", "BONUS_SILK"]
+        Strategics = ["BONUS_IRON", "BONUS_COPPER", "BONUS_HORSE"] # This will be redundant if Balanced resources is on
+        SemiStrategics = ["BONUS_IVORY", "BONUS_STONE", "BONUS_MARBLE"]
+        PreciousMetals = ["BONUS_GOLD", "BONUS_SILVER", "BONUS_GEMS"]
+        EarlyHappiness = ["BONUS_FUR", "BONUS_WINE"]
+        sortedTeams = teamHalfMap.keys()
+        sortedTeams.sort()
+        for iTeam in sortedTeams:
+            iPlayerCount = rm._get_player_count_for_team(iTeam)
+            iCopies = int(0.5*iPlayerCount)
+            if iCopies < 1: iCopies = 1
+            rm.place_balanced_team_resource(iTeam, CalendarBonus, 4, iCopies+1)
+            rm.place_balanced_team_resource(iTeam, SemiStrategics, 3, iCopies)
+            rm.place_balanced_team_resource(iTeam, PreciousMetals, 2, iCopies+1)
+            rm.place_balanced_team_resource(iTeam, EarlyHappiness, 2, iCopies+1)
 
     # Finalize by calling the engine's default extras (like Goody Huts)
     CyPythonMgr().allowDefaultImpl()
