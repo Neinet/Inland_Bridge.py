@@ -12,8 +12,12 @@ Features a center bridge splitting the sea into two, as well as several multipla
 - Latitude: Both hemispheres or one hemisphere.
 - Axial Tilt: 0, 90, and 45 degrees. 90 degrees is recommended for two-team games.
 - Team Start: If enabled, groups teams into halves or corners of the map. No effect if more than 5 teams.
-- Semi-Strategic Resource Balancing: If enabled, balances Ivory, Marble, and Stone resources by team playercount. (Note: the game engine might add these bonuses near starts anyway)
-- World Wrap and Resource balance options from Vanilla
+- Teamer Bonus Balancing: If enabled, balances team-region bonus groups using the team's assigned half or corner.
+- Islands: Disabled or enabled.
+- Geography: Two Seas, Infinity, or Hourglass.
+- World Wrap: Flat, Wrap X, or Wrap X & Y.
+- Resources: Standard or Balanced.
+- Debug Signs: If enabled, adds map signs for custom balancing placements.
 
 # Instructions
 1. Download Inland_Bridge.py from the latest [release.](https://github.com/AineiasStymphalios/Inland_Bridge.py/releases)
