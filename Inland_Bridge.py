@@ -60,7 +60,7 @@ def getCustomMapOptionName(argsList):
 	elif iOption == 7:
 		return "Team Start"
 	elif iOption == 8:
-		return "Teamer Bonus Balancing"
+		return "Misc. Teamer Balancing"
 	elif iOption == 9:
 		return "Resources"
 	elif iOption == 10:
@@ -146,7 +146,7 @@ def getCustomMapOptionDefault(argsList):
 	elif iOption == 8: # TeamerBalancing
 		return 0
 	elif iOption == 9: # Resources
-		return 0
+		return 1
 	elif iOption == 10: # Debug Signs
 		return 1
 	return 0
@@ -649,6 +649,70 @@ class GeometricMultiFractal(CvMapGeneratorUtil.MultilayeredFractal):
 							
 		return self.wholeworldPlotTypes
 
+def countTwoShoresLand(plotTypes, iW, iH, geography_opt):
+	counts = {}
+	counts["side_a"] = 0
+	counts["side_b"] = 0
+
+	for x in range(iW):
+		for y in range(iH):
+			i = y * iW + x
+			if plotTypes[i] == PlotTypes.PLOT_OCEAN:
+				continue
+			if geography_opt == 4: # Two Shores (E-W)
+				if x < (iW / 2):
+					counts["side_a"] += 1
+				else:
+					counts["side_b"] += 1
+			else: # Two Shores (N-S)
+				if y < (iH / 2):
+					counts["side_a"] += 1
+				else:
+					counts["side_b"] += 1
+
+	return counts
+
+def getTwoShoresLandBalanceScore(counts):
+	iTotal = counts["side_a"] + counts["side_b"]
+	if iTotal == 0:
+		return 0
+
+	iScoreA = abs(((counts["side_a"] * 2 * 10000) / iTotal) - 10000)
+	iScoreB = abs(((counts["side_b"] * 2 * 10000) / iTotal) - 10000)
+	if iScoreA > iScoreB:
+		return iScoreA
+	return iScoreB
+
+def isTwoShoresLandBalanceAcceptable(counts):
+	iTotal = counts["side_a"] + counts["side_b"]
+	if iTotal == 0:
+		return True
+
+	# +/- 3%, matching Teamer_Hemispheres.py.
+	if counts["side_a"] * 2 * 100 < iTotal * 97:
+		return False
+	if counts["side_a"] * 2 * 100 > iTotal * 103:
+		return False
+	if counts["side_b"] * 2 * 100 < iTotal * 97:
+		return False
+	if counts["side_b"] * 2 * 100 > iTotal * 103:
+		return False
+	return True
+
+def printTwoShoresLandBalance(iAttempt, counts, bAccepted, geography_opt):
+	sStatus = "rejected"
+	sLabelA = "west"
+	sLabelB = "east"
+	if bAccepted:
+		sStatus = "accepted"
+	if geography_opt == 5:
+		sLabelA = "south"
+		sLabelB = "north"
+
+	print "IB two shores land balance attempt %d %s" % (iAttempt, sStatus)
+	print "  %s land: %d" % (sLabelA, counts["side_a"])
+	print "  %s land: %d" % (sLabelB, counts["side_b"])
+
 def generatePlotTypes():
 	"""Specify map regions here."""
 	NiTextOut("Setting Plot Types (Python Central Plains) ...")
@@ -754,7 +818,7 @@ def generatePlotTypes():
 	elif geography_opt == 4: # Two Shores (EW)
 		bEnforceLandEdge = 0
 		base_regions =[
-			("Rect_Sea_Base", "Rect", 0.500, 0.500, 0.200, 1.000, 0, "water", BalanceGrain, ScatterGrain, 100),
+			("Rect_Sea_Base", "Rect", 0.500, 0.500, 0.200 + fSeaSizeChange, 1.000, 0, "water", BalanceGrain, ScatterGrain, 100),
 			("Rect_Sea_Grain", "Ellipse", 0.500, 0.200, 0.400 + fSeaSizeChange, 0.800, 0, "water", BalanceGrain, ScatterGrain, 70),
 			("Rect_Sea_Grain 2", "Ellipse", 0.500, 0.800, 0.400 + fSeaSizeChange, 0.800, 180, "water", BalanceGrain, ScatterGrain, 70),
 		]
@@ -768,9 +832,9 @@ def generatePlotTypes():
 	else: # Two Shores (NS)
 		bEnforceLandEdge = 0
 		base_regions = [
-			("Rect_Sea_Base", "Rect", 0.500, 0.500, 1, 0.2, 0, "water", BalanceGrain, ScatterGrain, 100),
-			("Rect_Sea_Grain", "Ellipse", 0.2, 0.5, 0.8, 0.4 + fSeaSizeChange, 0, "water", BalanceGrain, ScatterGrain, 70),
-			("Rect_Sea_Grain 2", "Ellipse", 0.8, 0.5, 0.8, 0.4 + fSeaSizeChange, 180, "water", BalanceGrain, ScatterGrain, 70),
+			("Rect_Sea_Base", "Rect", 0.500, 0.500, 1, 0.2 + fSeaSizeChange, 0, "water", BalanceGrain, ScatterGrain, 100),
+			("Rect_Sea_Grain", "Ellipse", 0.2, 0.5, 0.8, 0.4 + fSeaSizeChange, 0, "water", ScatterGrain, ScatterGrain, 70),
+			("Rect_Sea_Grain 2", "Ellipse", 0.8, 0.5, 0.8, 0.4 + fSeaSizeChange, 180, "water", ScatterGrain, ScatterGrain, 70),
 		]
 		if island_opt == 1: # Enabled
 			island_regions = [
@@ -798,8 +862,38 @@ def generatePlotTypes():
 	_DEBUG_REGIONS = regions
 
 	global plotgen
-	plotgen = GeometricMultiFractal()
-	plotTypes = plotgen.generatePlotsByRegion(regions)
+	bBalanceTwoShores = False
+	if (geography_opt == 4 or geography_opt == 5) and m.getCustomMapOption(8) == 0:
+		bBalanceTwoShores = True
+
+	if bBalanceTwoShores:
+		iW = m.getGridWidth()
+		iH = m.getGridHeight()
+		iMaxAttempts = 20
+		bestPlotTypes = None
+		iBestScore = -1
+
+		for iAttempt in range(1, iMaxAttempts + 1):
+			plotgen = GeometricMultiFractal()
+			attemptPlotTypes = plotgen.generatePlotsByRegion(regions)
+			counts = countTwoShoresLand(attemptPlotTypes, iW, iH, geography_opt)
+			bAccepted = isTwoShoresLandBalanceAcceptable(counts)
+			printTwoShoresLandBalance(iAttempt, counts, bAccepted, geography_opt)
+			if bAccepted:
+				plotTypes = attemptPlotTypes
+				break
+
+			iScore = getTwoShoresLandBalanceScore(counts)
+			if iBestScore == -1 or iScore < iBestScore:
+				iBestScore = iScore
+				bestPlotTypes = attemptPlotTypes
+
+		if bestPlotTypes != None and not bAccepted:
+			print "IB two shores land balance fallback after %d attempts" % iMaxAttempts
+			plotTypes = bestPlotTypes
+	else:
+		plotgen = GeometricMultiFractal()
+		plotTypes = plotgen.generatePlotsByRegion(regions)
 	
 	# ENFORCE LAND EDGES
 	if bEnforceLandEdge == 1: # Not Hourglass, Two Shores
@@ -1023,40 +1117,53 @@ def addFeatures():
 def getRiverStartCardinalDirection(argsList):
 	pPlot = argsList[0]
 	map = CyMap()
-
+	geography_opt = map.getCustomMapOption(4)
+	
 	iX = pPlot.getX()
 	iY = pPlot.getY()
 	iW = map.getGridWidth()
 	iH = map.getGridHeight()
-
+	
+	if geography_opt == 4: # Two Shores (EW)
+		if iX < (iW * 0.5):
+			return CardinalDirectionTypes.CARDINALDIRECTION_EAST
+		else:
+			return CardinalDirectionTypes.CARDINALDIRECTION_WEST
+	elif geography_opt == 5: # Two Shores (NS)
+		if iY < (iH * 0.5):
+			return CardinalDirectionTypes.CARDINALDIRECTION_NORTH
+		else:
+			return CardinalDirectionTypes.CARDINALDIRECTION_SOUTH
+	else:
 	# 1. THE LAND BRIDGE OVERRIDE
 	# If we are in the central 20% of the map, force rivers sideways into the seas.
-	if (iX > (iW * 0.4) and iX < (iW * 0.6)):
+		if (iX > (iW * 0.4) and iX < (iW * 0.6)):
+			if (iX < (iW / 2)):
+				return CardinalDirectionTypes.CARDINALDIRECTION_WEST
+			else:
+				return CardinalDirectionTypes.CARDINALDIRECTION_EAST
+
+		# 2. Top and Bottom latitudes flow towards the equator
+		if (iY > ((iH * 2) / 3)):
+			return CardinalDirectionTypes.CARDINALDIRECTION_SOUTH
+
+		if (iY < (iH / 3)):
+			return CardinalDirectionTypes.CARDINALDIRECTION_NORTH
+
+		# 3. Middle latitudes flow horizontally into the nearest sea
+		if (iX < (iW / 4)):
+			return CardinalDirectionTypes.CARDINALDIRECTION_EAST
 		if (iX < (iW / 2)):
 			return CardinalDirectionTypes.CARDINALDIRECTION_WEST
-		else:
+		if (iX < ((iW * 3) / 4)):
 			return CardinalDirectionTypes.CARDINALDIRECTION_EAST
 
-	# 2. Top and Bottom latitudes flow towards the equator
-	if (iY > ((iH * 2) / 3)):
-		return CardinalDirectionTypes.CARDINALDIRECTION_SOUTH
-
-	if (iY < (iH / 3)):
-		return CardinalDirectionTypes.CARDINALDIRECTION_NORTH
-
-	# 3. Middle latitudes flow horizontally into the nearest sea
-	if (iX < (iW / 4)):
-		return CardinalDirectionTypes.CARDINALDIRECTION_EAST
-	if (iX < (iW / 2)):
 		return CardinalDirectionTypes.CARDINALDIRECTION_WEST
-	if (iX < ((iW * 3) / 4)):
-		return CardinalDirectionTypes.CARDINALDIRECTION_EAST
-
-	return CardinalDirectionTypes.CARDINALDIRECTION_WEST
 
 def getRiverAltitude(argsList):
 	pPlot = argsList[0]
 	map = CyMap()
+	geography_opt = map.getCustomMapOption(4)
 
 	CyPythonMgr().allowDefaultImpl()
 
@@ -1065,16 +1172,23 @@ def getRiverAltitude(argsList):
 	iW = map.getGridWidth()
 	iH = map.getGridHeight()
 	
-	iCenterY = iH / 2
-	
-	if iX < (iW / 2):
-		iCenterX = iW / 4
+	if geography_opt == 4: # Two Shores (EW)
+		iCenterX = iW / 2
+		if iY < (iH / 2):
+			iCenterY = iH / 4
+		else:
+			iCenterY = (iH * 3) / 4
+		return ((abs(iX - iCenterX) * 10) + (abs(iY - iCenterY) * 15))
 	else:
-		iCenterX = (iW * 3) / 4
-		
-	# The X-axis gradient (30) is now much steeper than the Y-axis gradient (10).
-	# This forces rivers to "fall" into the sea rather than running parallel to the shore.
-	return ((abs(iX - iCenterX) * 15) + (abs(iY - iCenterY) * 10))
+		iCenterY = iH / 2
+		if iX < (iW / 2):
+			iCenterX = iW / 4
+		else:
+			iCenterX = (iW * 3) / 4
+			
+		# The X-axis gradient (30) is now much steeper than the Y-axis gradient (10).
+		# This forces rivers to "fall" into the sea rather than running parallel to the shore.
+		return ((abs(iX - iCenterX) * 15) + (abs(iY - iCenterY) * 10))
 
 # -----------------------------------------------------------------------------
 # Normalization overrides

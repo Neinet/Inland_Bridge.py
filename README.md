@@ -5,6 +5,7 @@ Features a center bridge splitting the sea into two, as well as several multipla
 ![StandardSizeThumb](two_seas.png)
 ![StandardSizeThumb](infinity.png)
 ![StandardSizeThumb](hourglass.png)
+![StandardSizeThumb](two_shores.png)
 
 # Features
 ## Map Options
@@ -12,9 +13,10 @@ Features a center bridge splitting the sea into two, as well as several multipla
 - Latitude: Both hemispheres or one hemisphere.
 - Axial Tilt: 0, 90, and 45 degrees. 90 degrees is recommended for two-team games.
 - Team Start: If enabled, groups teams into halves or corners of the map. No effect if more than 5 teams.
-- Teamer Bonus Balancing: If enabled, balances team-region bonus groups using the team's assigned half or corner.
+- Teamer Bonus Balancing: If enabled, balances team-region bonus groups using the team's assigned half or corner. If The Two Shores option is selected, landmass sizes will be balanced to within 3% of each.
 - Islands: Disabled or enabled.
-- Geography: Two Seas, Infinity, or Hourglass.
+- Geography: Two Seas, Infinity, Hourglass, Two Seas (corner seas), Two Shores (E-W or N-S split)
+- Two Tile Seas: Increases coast distances. Recommended for some maps to allow fair access to islands.
 - World Wrap: Flat, Wrap X, or Wrap X & Y.
 - Resources: Standard or Balanced.
 - Debug Signs: If enabled, adds map signs for custom balancing placements.
