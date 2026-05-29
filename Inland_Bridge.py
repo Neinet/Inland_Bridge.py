@@ -39,7 +39,7 @@ def isAdvancedMap():
 	return 1
 
 def getNumCustomMapOptions():
-	return 10
+	return 11
 
 def getCustomMapOptionName(argsList):
 	[iOption] = argsList
@@ -50,18 +50,20 @@ def getCustomMapOptionName(argsList):
 	elif iOption == 2:
 		return "Axial Tilt"
 	elif iOption == 3:
-		return "Team Start"
+		return "World Wrap"
 	elif iOption == 4:
-		return "Teamer Bonus Balancing"
+		return "Geography"
 	elif iOption == 5:
 		return "Islands"
 	elif iOption == 6:
-		return "Geography"
+		return "Two-tile Coasts"
 	elif iOption == 7:
-		return "World Wrap"
+		return "Team Start"
 	elif iOption == 8:
-		return "Resources"
+		return "Teamer Bonus Balancing"
 	elif iOption == 9:
+		return "Resources"
+	elif iOption == 10:
 		return "Debug Signs"
 	return ""
 
@@ -70,13 +72,14 @@ def getNumCustomMapOptionValues(argsList):
 	if iOption == 0: return 2 # Climate Details
 	elif iOption == 1: return 2 # Latitude
 	elif iOption == 2: return 3 # Axial Tilt
-	elif iOption == 3: return 2 # Team Start (Start Together or Disabled)
-	elif iOption == 4: return 2 # Semistrategic resources
-	elif iOption == 5: return 2 # 
-	elif iOption == 6: return 6 # 
-	elif iOption == 7: return 3 # 
-	elif iOption == 8: return 2 # 
-	elif iOption == 9: return 2 # Debug Signs
+	elif iOption == 3: return 3 # World Wrap
+	elif iOption == 4: return 6 # Geography
+	elif iOption == 5: return 2 # Islands
+	elif iOption == 6: return 2 # Two-tile Coasts
+	elif iOption == 7: return 2 # Team Start (Start Together or Disabled)
+	elif iOption == 8: return 2 # Semistrategic resources
+	elif iOption == 9: return 2 # Resources
+	elif iOption == 10: return 2 # Debug Signs
 	return 0
 
 def getCustomMapOptionDescAt(argsList):
@@ -91,30 +94,33 @@ def getCustomMapOptionDescAt(argsList):
 		if iSelection == 0: return "Disabled"
 		elif iSelection == 1: return "90 Degrees"
 		return "45 Degrees"
-	elif iOption == 3: # Team Start
-		if iSelection == 0: return "Start Together"
-		return "Disabled"
-	elif iOption == 4: # TeamerBalancing
-		if iSelection == 0: return "Enabled"
-		return "Disabled"
-	elif iOption == 5: # Islands
-		if iSelection == 0: return "Disabled"
-		return "Enabled"
-	elif iOption == 6: # Geography
+	elif iOption == 3: # Wrap
+		if iSelection == 0: return "Flat"
+		elif iSelection == 1: return "Wrap X"
+		return "Wrap X & Y"
+	elif iOption == 4: # Geography
 		if iSelection == 0: return "Two Seas"
 		elif iSelection == 1: return "Infinity"
 		elif iSelection == 2: return "Hourglass"
 		elif iSelection == 3: return "Two Seas (corner seas)"
 		elif iSelection == 4: return "Two Shores (E-W)"
 		return "Two Shores (N-S)"
-	elif iOption == 7: # Wrap
-		if iSelection == 0: return "Flat"
-		elif iSelection == 1: return "Wrap X"
-		return "Wrap X & Y"
-	elif iOption == 8: # Resource
+	elif iOption == 5: # Islands
+		if iSelection == 0: return "Disabled"
+		return "Enabled"
+	elif iOption == 6: # Two-tile Coasts
+		if iSelection == 0: return "Enabled"
+		return "Disabled"
+	elif iOption == 7: # Team Start
+		if iSelection == 0: return "Start Together"
+		return "Disabled"
+	elif iOption == 8: # TeamerBalancing
+		if iSelection == 0: return "Enabled"
+		return "Disabled"
+	elif iOption == 9: # Resource
 		if iSelection == 0: return "Standard"
 		return "Balanced"
-	elif iOption == 9: # Debug Signs
+	elif iOption == 10: # Debug Signs
 		if iSelection == 0: return "Disabled"
 		return "Enabled"
 	return ""
@@ -127,19 +133,21 @@ def getCustomMapOptionDefault(argsList):
 		return 0
 	elif iOption == 2: # Axial Tilt: 
 		return 1
-	elif iOption == 3: # Team Start: 
+	elif iOption == 3: # Wrap
 		return 0
-	elif iOption == 4: # TeamerBalancing
+	elif iOption == 4: # Geography: Two Seas
 		return 0
 	elif iOption == 5: # Islands: On
 		return 1
-	elif iOption == 6: # Geography: Two Seas
+	elif iOption == 6: # Two-tile Coasts
 		return 0
-	elif iOption == 7: # Wrap
+	elif iOption == 7: # Team Start:
 		return 0
-	elif iOption == 8: # Resources
+	elif iOption == 8: # TeamerBalancing
 		return 0
-	elif iOption == 9: # Debug Signs
+	elif iOption == 9: # Resources
+		return 0
+	elif iOption == 10: # Debug Signs
 		return 1
 	return 0
 
@@ -172,19 +180,23 @@ def beforeGeneration():
 	
 	activeTeams.sort() # Sorted list ensures consistent mapping
 	numTeams = len(activeTeams)
-	teamStartOption = map.getCustomMapOption(3)
+	teamStartOption = map.getCustomMapOption(7)
+	geographyOption = map.getCustomMapOption(4)
 
 	bTeamPlacement = False
 	teamHalfMap.clear()
 
 	# We only handle team placement for 2, 3, or 4 teams
-	if teamStartOption != 2 and (numTeams >= 2 and numTeams <= 4):
+	if teamStartOption == 0 and (numTeams >= 2 and numTeams <= 4):
 		bTeamPlacement = True
 		iH = map.getGridHeight()
 		
 		# 1. Define region pool based on team count
 		if numTeams == 2:
-			regions = [0, 1] # 0=North, 1=South
+			if geographyOption == 4:
+				regions = [2, 3] # 2=West, 3=East
+			else:
+				regions = [0, 1] # 0=North, 1=South
 			southThreshold = int(iH * 0.3)
 			northThreshold = int(iH * 0.7)
 		else:
@@ -208,6 +220,54 @@ def beforeGeneration():
 			
 	print "=== beforeGeneration END ==="
 
+def _get_team_region_bounds(region, iW, iH):
+	xMin, xMax = 2, iW - 2
+	yMin, yMax = 2, iH - 2
+
+	if region == 0:
+		yMin = northThreshold
+	elif region == 1:
+		yMax = southThreshold
+	elif region == 2:
+		xMax = int(iW * 0.2)
+	elif region == 3:
+		xMin = int(iW * 0.8)
+	elif region == 10 or region == 11:
+		yMax = int(iH * 0.3)
+	elif region == 12 or region == 13:
+		yMin = int(iH * 0.7)
+
+	if region == 10 or region == 12:
+		xMax = int(iW * 0.3)
+	elif region == 11 or region == 13:
+		xMin = int(iW * 0.7)
+
+	if xMin < 2: xMin = 2
+	if xMax > iW - 3: xMax = iW - 3
+	if yMin < 2: yMin = 2
+	if yMax > iH - 3: yMax = iH - 3
+
+	return (xMin, xMax, yMin, yMax)
+
+def _get_largest_land_area_in_bounds(map, xMin, xMax, yMin, yMax):
+	areaCounts = {}
+	bestAreaID = -1
+	bestCount = 0
+
+	for x in range(xMin, xMax + 1):
+		for y in range(yMin, yMax + 1):
+			pPlot = map.plot(x, y)
+			if pPlot.isWater() or pPlot.isPeak(): continue
+			iArea = pPlot.getArea()
+			if not areaCounts.has_key(iArea):
+				areaCounts[iArea] = 0
+			areaCounts[iArea] += 1
+			if areaCounts[iArea] > bestCount:
+				bestCount = areaCounts[iArea]
+				bestAreaID = iArea
+
+	return bestAreaID
+
 def _assign_all_starting_plots():
 	gc = CyGlobalContext()
 	map = CyMap()
@@ -230,16 +290,13 @@ def _assign_all_starting_plots():
 
 	assignments = {}
 	assigned_plots = []
-	
-	biggestArea = map.findBiggestArea(False)
-	biggestAreaID = -1
-	if not biggestArea.isNone():
-		biggestAreaID = biggestArea.getID()
 
 	for tID in sortedTeams:
 		teamPlayers = teamPlayersMap[tID]
 		numInTeam = len(teamPlayers)
 		region = teamHalfMap.get(tID, -1)
+		(teamXMin, teamXMax, teamYMin, teamYMax) = _get_team_region_bounds(region, iW, iH)
+		teamAreaID = _get_largest_land_area_in_bounds(map, teamXMin, teamXMax, teamYMin, teamYMax)
 		
 		# RANDOMIZE SLICES
 		# We create a list of indices and shuffle them to assign horizontal positions
@@ -260,71 +317,107 @@ def _assign_all_starting_plots():
 			player.AI_updateFoundValues(True)
 
 			# --- SEARCH BOX CALCULATION ---
-			xMin, xMax = 2, iW - 2
-			yMin, yMax = 2, iH - 2
+			xMin, xMax = teamXMin, teamXMax
+			yMin, yMax = teamYMin, teamYMax
 
-			# Team Region Logic
-			if region == 0: yMin = northThreshold
-			elif region == 1: yMax = southThreshold
-			elif region == 10 or region == 11: yMax = int(iH * 0.3)
-			elif region == 12 or region == 13: yMin = int(iH * 0.7)
-
-			# Horizontal Slice Logic (Even Distribution)
-			availXMin, availXMax = 2, iW - 2
-			if region == 10 or region == 12: availXMax = int(iW * 0.3)
-			elif region == 11 or region == 13: availXMin = int(iW * 0.7)
+			# Slice Logic (Even Distribution)
+			availXMin, availXMax = teamXMin, teamXMax
+			availYMin, availYMax = teamYMin, teamYMax
 
 			sliceIdx = sliceOrder[i]
-			sliceWidth = (availXMax - availXMin) / numInTeam
-			xMin = availXMin + (sliceIdx * sliceWidth)
-			xMax = xMin + sliceWidth
+			fullXMin, fullXMax = xMin, xMax
+			fullYMin, fullYMax = yMin, yMax
+			if region == 2 or region == 3:
+				sliceHeight = (availYMax - availYMin) / numInTeam
+				fullYMin = availYMin + (sliceIdx * sliceHeight)
+				fullYMax = fullYMin + sliceHeight
+				fullXMin = availXMin
+				fullXMax = availXMax
+				xMin = fullXMin
+				xMax = fullXMax
+				yMin = fullYMin
+				yMax = fullYMax
+				if sliceHeight > 8:
+					iSliceMargin = 4
+					yMin = fullYMin + iSliceMargin
+					yMax = fullYMax - iSliceMargin
+			else:
+				sliceWidth = (availXMax - availXMin) / numInTeam
+				fullXMin = availXMin + (sliceIdx * sliceWidth)
+				fullXMax = fullXMin + sliceWidth
+				xMin = fullXMin
+				xMax = fullXMax
 			
 			# Add overlap and clamp
 			xMin = max(2, xMin - 2)
 			xMax = min(iW - 3, xMax + 2)
 			yMin = max(2, yMin)
 			yMax = min(iH - 3, yMax)
+			fullXMin = max(2, fullXMin - 2)
+			fullXMax = min(iW - 3, fullXMax + 2)
+			fullYMin = max(2, fullYMin)
+			fullYMax = min(iH - 3, fullYMax)
+
+			searchBoxes = [(xMin, xMax, yMin, yMax)]
+			if region == 2 or region == 3:
+				if fullXMin != xMin or fullXMax != xMax or fullYMin != yMin or fullYMax != yMax:
+					searchBoxes.append((fullXMin, fullXMax, fullYMin, fullYMax))
 
 			# 3. Best Plot Search
-			currentMinDist = 10
 			plotAssigned = False
-			while currentMinDist >= 0 and not plotAssigned:
-				bestVal, bestPlot = -1, None
-				for x in range(xMin, xMax + 1):
-					for y in range(yMin, yMax + 1):
-						pPlot = map.plot(x, y)
-						if pPlot.isWater() or pPlot.isPeak(): continue
-						if biggestAreaID != -1 and pPlot.getArea() != biggestAreaID: continue
-						
-						tooClose = False
-						for (ax, ay) in assigned_plots:
-							if plotDistance(x, y, ax, ay) < currentMinDist:
-								tooClose = True
-								break
-						if tooClose: continue
-						
-						val = pPlot.getFoundValue(playerID)
-						if val > bestVal:
-							bestVal, bestPlot = val, pPlot
-				
-				if bestPlot is not None:
-					assignments[playerID] = map.plotNum(bestPlot.getX(), bestPlot.getY())
-					assigned_plots.append((bestPlot.getX(), bestPlot.getY()))
-					plotAssigned = True
-				else:
-					currentMinDist -= 1
+			for (searchXMin, searchXMax, searchYMin, searchYMax) in searchBoxes:
+				currentMinDist = 10
+				while currentMinDist >= 5 and not plotAssigned:
+					bestVal, bestPlot = -1, None
+					for x in range(searchXMin, searchXMax + 1):
+						for y in range(searchYMin, searchYMax + 1):
+							pPlot = map.plot(x, y)
+							if pPlot.isWater() or pPlot.isPeak(): continue
+							if teamAreaID != -1 and pPlot.getArea() != teamAreaID: continue
+							
+							tooClose = False
+							for (ax, ay) in assigned_plots:
+								if plotDistance(x, y, ax, ay) < currentMinDist:
+									tooClose = True
+									break
+							if tooClose: continue
+							
+							val = pPlot.getFoundValue(playerID)
+							if region == 2 or region == 3:
+								iEdgeDist = min(y - fullYMin, fullYMax - y)
+								if iEdgeDist < 0: iEdgeDist = 0
+								val -= (10 - min(10, iEdgeDist)) * 8
+							elif region == 0 or region == 1:
+								iEdgeDist = min(x - fullXMin, fullXMax - x)
+								if iEdgeDist < 0: iEdgeDist = 0
+								val -= (10 - min(10, iEdgeDist)) * 8
+							if val > bestVal:
+								bestVal, bestPlot = val, pPlot
+					
+					if bestPlot is not None:
+						assignments[playerID] = map.plotNum(bestPlot.getX(), bestPlot.getY())
+						assigned_plots.append((bestPlot.getX(), bestPlot.getY()))
+						plotAssigned = True
+					else:
+						currentMinDist -= 1
+				if plotAssigned: break
 			
 			# Emergency Fallback
 			if not plotAssigned:
-				for x in range(xMin, xMax + 1):
-					for y in range(yMin, yMax + 1):
+				for x in range(fullXMin, fullXMax + 1):
+					for y in range(fullYMin, fullYMax + 1):
 						pPlot = map.plot(x, y)
 						if not pPlot.isWater() and not pPlot.isPeak():
-							if (x, y) not in assigned_plots:
-								assignments[playerID] = map.plotNum(x, y)
-								assigned_plots.append((x, y))
-								plotAssigned = True
-								break
+							tooClose = False
+							for (ax, ay) in assigned_plots:
+								if plotDistance(x, y, ax, ay) < 5:
+									tooClose = True
+									break
+							if tooClose: continue
+							assignments[playerID] = map.plotNum(x, y)
+							assigned_plots.append((x, y))
+							plotAssigned = True
+							break
 					if plotAssigned: break
 					
 	return assignments
@@ -386,11 +479,11 @@ def minStartingDistanceModifier():
 ########################################
 def getWrapX():
 	map = CyMap()
-	return (map.getCustomMapOption(7) == 1 or map.getCustomMapOption(7) == 2)
+	return (map.getCustomMapOption(3) == 1 or map.getCustomMapOption(3) == 2)
 
 def getWrapY():
 	map = CyMap()
-	return (map.getCustomMapOption(7) == 2)
+	return (map.getCustomMapOption(3) == 2)
 	
 
 def getTopLatitude():
@@ -568,7 +661,7 @@ def generatePlotTypes():
 	climate = m.getClimate()
 	
 	peak_opt = m.getCustomMapOption(1)
-	geography_opt = m.getCustomMapOption(6)
+	geography_opt = m.getCustomMapOption(4)
 	island_opt = m.getCustomMapOption(5)
 	iRawSeaLevelChange = gc.getSeaLevelInfo(m.getSeaLevel()).getSeaLevelChange()
 	fSeaSizeChange = 0.0
@@ -598,7 +691,7 @@ def generatePlotTypes():
 
 	# Name, Type, CX, CY, W, H, Angle, Terrain, Grain, Hills, Water%
 	regions = [
-			("Rect3", "Rect", 0.500, 0.5, 1.000, 1.000, 0, "default", BalanceGrain, ScatterGrain, 0),
+			("Rect3", "Rect", 0.500, 0.5, 1.000, 1.000, 0, "default", BalanceGrain, ScatterGrain+1, 0),
 		]
 	if geography_opt == 0 or geography_opt == 3: # Two Seas / (Corner seas)
 		bEnforceLandEdge = 1
@@ -662,25 +755,27 @@ def generatePlotTypes():
 		bEnforceLandEdge = 0
 		base_regions =[
 			("Rect_Sea_Base", "Rect", 0.500, 0.500, 0.200, 1.000, 0, "water", BalanceGrain, ScatterGrain, 100),
-			("Rect_Sea_Grain", "Ellipse", 0.500, 0.200, 0.400, 0.800, 0, "water", BalanceGrain, ScatterGrain, 70),
-			("Rect_Sea_Grain 2", "Ellipse", 0.500, 0.800, 0.400, 0.800, 180, "water", BalanceGrain, ScatterGrain, 70),
+			("Rect_Sea_Grain", "Ellipse", 0.500, 0.200, 0.400 + fSeaSizeChange, 0.800, 0, "water", BalanceGrain, ScatterGrain, 70),
+			("Rect_Sea_Grain 2", "Ellipse", 0.500, 0.800, 0.400 + fSeaSizeChange, 0.800, 180, "water", BalanceGrain, ScatterGrain, 70),
 		]
 		if island_opt == 1: # Enabled
 			island_regions = [
-					("IslandsL", "Rect", 0.5, 0.27, 0.250, 0.250, 0, "flat", ScatterGrain, ScatterGrain, 85),
-					("IslandsR", "Rect", 0.5, 0.73, 0.250, 0.250, 0, "flat", ScatterGrain, ScatterGrain, 85),
+					("IslandsBL", "Rect", 0.4, 0.27, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
+					("IslandsTL", "Rect", 0.4, 0.73, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
+					("IslandsBR", "Rect", 0.6, 0.27, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
+					("IslandsTR", "Rect", 0.6, 0.73, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
 				]
 	else: # Two Shores (NS)
 		bEnforceLandEdge = 0
 		base_regions = [
 			("Rect_Sea_Base", "Rect", 0.500, 0.500, 1, 0.2, 0, "water", BalanceGrain, ScatterGrain, 100),
-			("Rect_Sea_Grain", "Ellipse", 0.2, 0.5, 0.8, 0.4, 0, "water", BalanceGrain, ScatterGrain, 70),
-			("Rect_Sea_Grain 2", "Ellipse", 0.8, 0.5, 0.8, 0.4, 180, "water", BalanceGrain, ScatterGrain, 70),
+			("Rect_Sea_Grain", "Ellipse", 0.2, 0.5, 0.8, 0.4 + fSeaSizeChange, 0, "water", BalanceGrain, ScatterGrain, 70),
+			("Rect_Sea_Grain 2", "Ellipse", 0.8, 0.5, 0.8, 0.4 + fSeaSizeChange, 180, "water", BalanceGrain, ScatterGrain, 70),
 		]
 		if island_opt == 1: # Enabled
 			island_regions = [
-					("IslandsL", "Rect", 0.270, 0.5, 0.250, 0.250, 0, "flat", ScatterGrain, ScatterGrain, 85),
-					("IslandsR", "Rect", 0.730, 0.5, 0.250, 0.250, 0, "flat", ScatterGrain, ScatterGrain, 85),
+					("IslandsL", "Rect", 0.270, 0.5, 0.250, 0.250, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
+					("IslandsR", "Rect", 0.730, 0.5, 0.250, 0.250, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
 				]
 
 	regions.extend(base_regions)
@@ -920,7 +1015,9 @@ def addFeatures():
 	NiTextOut("Adding Features (Python Inland Sea) ...")
 	featuregen = ISFeatureGenerator()
 	featuregen.addFeatures()
-	expandCoastToTwoTiles()
+	map = CyMap()
+	if map.getCustomMapOption(6) == 0:
+		expandCoastToTwoTiles()
 	return 0
 
 def getRiverStartCardinalDirection(argsList):
@@ -994,7 +1091,7 @@ class ResourceManager:
 		self.engine = CyEngine()
 		self.iW = map_obj.getGridWidth()
 		self.iH = map_obj.getGridHeight()
-		self.bDebugSignsEnabled = (map_obj.getCustomMapOption(9) == 1)
+		self.bDebugSignsEnabled = (map_obj.getCustomMapOption(10) == 1)
 
 	def _bonus_id(self, name):
 		return self.gc.getInfoTypeForString(name)
@@ -1064,6 +1161,10 @@ class ResourceManager:
 			iSouth = northThreshold
 		elif region == 1:
 			iNorth = southThreshold
+		elif region == 2:
+			iEast = int(self.iW * 0.3)
+		elif region == 3:
+			iWest = int(self.iW * 0.7)
 		elif region == 10:
 			iEast = int(self.iW * 0.3)
 			iNorth = int(self.iH * 0.3)
@@ -1247,8 +1348,8 @@ def normalizeAddExtras():
 	# Instantiate the Generalized Manager
 	rm = ResourceManager(map, gc, dice)
 	
-	iResourceOption = map.getCustomMapOption(8)
-	iTeamerBalancingOption = map.getCustomMapOption(4)
+	iResourceOption = map.getCustomMapOption(9)
+	iTeamerBalancingOption = map.getCustomMapOption(8)
 	
 	# Vanilla balancing option
 	if iResourceOption ==1:
