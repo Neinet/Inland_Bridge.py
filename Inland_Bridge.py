@@ -30,8 +30,8 @@ def debugLog(msg):
 		print msg	# fallback
 
 def getDescription():
-	desc = "Inland_Sea.py with a center bridge and and multiplayer-friendly customizations."
-	desc += "Recommended sizes: Small for 4v4."
+	desc = "Inland_Sea.py with a center bridge and customizations intended for multiplayer teamer games."
+	desc += "Recommended sizes: Tiny for 2v2, Small for 3v3, Standard for 4v4."
 	return desc
 
 def isAdvancedMap():
@@ -39,14 +39,14 @@ def isAdvancedMap():
 	return 1
 
 def getNumCustomMapOptions():
-	return 11
+	return 10
 
 def getCustomMapOptionName(argsList):
 	[iOption] = argsList
 	if iOption == 0:
 		return "Climate Details"
 	elif iOption == 1:
-		return "Latitude"
+		return "Hemisphere Option"
 	elif iOption == 2:
 		return "Axial Tilt"
 	elif iOption == 3:
@@ -60,10 +60,8 @@ def getCustomMapOptionName(argsList):
 	elif iOption == 7:
 		return "Team Start"
 	elif iOption == 8:
-		return "Misc. Teamer Balancing"
+		return "Teamer Resource Balancing"
 	elif iOption == 9:
-		return "Resources"
-	elif iOption == 10:
 		return "Debug Signs"
 	return ""
 
@@ -78,8 +76,7 @@ def getNumCustomMapOptionValues(argsList):
 	elif iOption == 6: return 2 # Two-tile Coasts
 	elif iOption == 7: return 2 # Team Start (Start Together or Disabled)
 	elif iOption == 8: return 2 # Semistrategic resources
-	elif iOption == 9: return 2 # Resources
-	elif iOption == 10: return 2 # Debug Signs
+	elif iOption == 9: return 2 # Debug Signs
 	return 0
 
 def getCustomMapOptionDescAt(argsList):
@@ -115,12 +112,9 @@ def getCustomMapOptionDescAt(argsList):
 		if iSelection == 0: return "Start Together"
 		return "Disabled"
 	elif iOption == 8: # TeamerBalancing
-		if iSelection == 0: return "Enabled"
-		return "Disabled"
-	elif iOption == 9: # Resource
-		if iSelection == 0: return "Standard"
-		return "Balanced"
-	elif iOption == 10: # Debug Signs
+		if iSelection == 0: return "Disabled"
+		return "Enabled"
+	elif iOption == 9: # Debug Signs
 		if iSelection == 0: return "Disabled"
 		return "Enabled"
 	return ""
@@ -144,11 +138,9 @@ def getCustomMapOptionDefault(argsList):
 	elif iOption == 7: # Team Start:
 		return 0
 	elif iOption == 8: # TeamerBalancing
+		return 1
+	elif iOption == 9: # Debug Signs
 		return 0
-	elif iOption == 9: # Resources
-		return 1
-	elif iOption == 10: # Debug Signs
-		return 1
 	return 0
 
 ########################################
@@ -242,8 +234,8 @@ def _get_team_region_bounds(region, iW, iH):
 	elif region == 11 or region == 13:
 		xMin = int(iW * 0.7)
 
-	if xMin < 2: xMin = 2
-	if xMax > iW - 3: xMax = iW - 3
+	if xMin < 4: xMin = 4
+	if xMax > iW - 5: xMax = iW - 5
 	if yMin < 2: yMin = 2
 	if yMax > iH - 3: yMax = iH - 3
 
@@ -349,12 +341,12 @@ def _assign_all_starting_plots():
 				xMax = fullXMax
 			
 			# Add overlap and clamp
-			xMin = max(2, xMin - 2)
-			xMax = min(iW - 3, xMax + 2)
+			xMin = max(4, xMin - 2)
+			xMax = min(iW - 5, xMax + 2)
 			yMin = max(2, yMin)
 			yMax = min(iH - 3, yMax)
-			fullXMin = max(2, fullXMin - 2)
-			fullXMax = min(iW - 3, fullXMax + 2)
+			fullXMin = max(4, fullXMin - 2)
+			fullXMax = min(iW - 5, fullXMax + 2)
 			fullYMin = max(2, fullYMin)
 			fullYMax = min(iH - 3, fullYMax)
 
@@ -494,12 +486,12 @@ def getBottomLatitude():
 def getGridSize(argsList):
 	"Because this is such a land-heavy map, override getGridSize() to make the map smaller"
 	grid_sizes = {
-		WorldSizeTypes.WORLDSIZE_DUEL:		(7,4),
-		WorldSizeTypes.WORLDSIZE_TINY:		(9,6),
-		WorldSizeTypes.WORLDSIZE_SMALL:		(12,7),
-		WorldSizeTypes.WORLDSIZE_STANDARD:	(13,8),
-		WorldSizeTypes.WORLDSIZE_LARGE:		(15,9),
-		WorldSizeTypes.WORLDSIZE_HUGE:		(16,10),
+		WorldSizeTypes.WORLDSIZE_DUEL:		(6,4),
+		WorldSizeTypes.WORLDSIZE_TINY:		(8,5),
+		WorldSizeTypes.WORLDSIZE_SMALL:		(10,6),
+		WorldSizeTypes.WORLDSIZE_STANDARD:	(12,7),
+		WorldSizeTypes.WORLDSIZE_LARGE:		(13,8),
+		WorldSizeTypes.WORLDSIZE_HUGE:		(14,9),
 	}
 
 	if (argsList[0] == -1): # (-1,) is passed to function on loads
@@ -770,10 +762,10 @@ def generatePlotTypes():
 		if island_opt == 1: # Enabled
 			# Name, Type, CX, CY, W, H, Angle, Terrain, Grain, Hills, Water%
 			island_regions = [
-				("IslandsTL", "Rect", 0.270, 0.650, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 85),
-				("IslandsTR", "Rect", 0.730, 0.650, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 85),
-				("IslandsBL", "Rect", 0.270, 0.350, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 85),
-				("IslandsBR", "Rect", 0.730, 0.350, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 85),
+				("IslandsTL", "Rect", 0.270, 0.60, 0.170, 0.170, 0, "flat", ScatterGrain, ScatterGrain, 80),
+				("IslandsTR", "Rect", 0.730, 0.60, 0.170, 0.170, 0, "flat", ScatterGrain, ScatterGrain, 80),
+				("IslandsBL", "Rect", 0.270, 0.40, 0.170, 0.170, 0, "flat", ScatterGrain, ScatterGrain, 80),
+				("IslandsBR", "Rect", 0.730, 0.40, 0.170, 0.170, 0, "flat", ScatterGrain, ScatterGrain, 80),
 			]
 		if geography_opt == 3:
 			additional_regions = [
@@ -810,10 +802,10 @@ def generatePlotTypes():
 		if island_opt == 1: # Enabled
 			# Name, Type, CX, CY, W, H, Angle, Terrain, Grain, Hills, Water%
 			island_regions = [
-				("IslandsTL", "Rect", 0.100, 0.650, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 87 + iWaterPercentChange),
-				("IslandsTR", "Rect", 0.900, 0.650, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 87 + iWaterPercentChange),
-				("IslandsBL", "Rect", 0.100, 0.350, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 87 + iWaterPercentChange),
-				("IslandsBR", "Rect", 0.900, 0.350, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 87 + iWaterPercentChange),
+				("IslandsTL", "Rect", 0.100, 0.650, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 80 + iWaterPercentChange),
+				("IslandsTR", "Rect", 0.900, 0.650, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 80 + iWaterPercentChange),
+				("IslandsBL", "Rect", 0.100, 0.350, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 80 + iWaterPercentChange),
+				("IslandsBR", "Rect", 0.900, 0.350, 0.170, 0.200, 0, "flat", ScatterGrain, ScatterGrain, 80 + iWaterPercentChange),
 			]
 	elif geography_opt == 4: # Two Shores (EW)
 		bEnforceLandEdge = 0
@@ -824,10 +816,10 @@ def generatePlotTypes():
 		]
 		if island_opt == 1: # Enabled
 			island_regions = [
-					("IslandsBL", "Rect", 0.4, 0.27, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
-					("IslandsTL", "Rect", 0.4, 0.73, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
-					("IslandsBR", "Rect", 0.6, 0.27, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
-					("IslandsTR", "Rect", 0.6, 0.73, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
+					("IslandsBL", "Rect", 0.4, 0.27, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 80 + iWaterPercentChange),
+					("IslandsTL", "Rect", 0.4, 0.73, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 80 + iWaterPercentChange),
+					("IslandsBR", "Rect", 0.6, 0.27, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 80 + iWaterPercentChange),
+					("IslandsTR", "Rect", 0.6, 0.73, 0.2, 0.2, 0, "flat", ScatterGrain, ScatterGrain, 80 + iWaterPercentChange),
 				]
 	else: # Two Shores (NS)
 		bEnforceLandEdge = 0
@@ -838,8 +830,8 @@ def generatePlotTypes():
 		]
 		if island_opt == 1: # Enabled
 			island_regions = [
-					("IslandsL", "Rect", 0.270, 0.5, 0.250, 0.250, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
-					("IslandsR", "Rect", 0.730, 0.5, 0.250, 0.250, 0, "flat", ScatterGrain, ScatterGrain, 85 + iWaterPercentChange),
+					("IslandsL", "Rect", 0.270, 0.5, 0.250, 0.250, 0, "flat", ScatterGrain, ScatterGrain, 80 + iWaterPercentChange),
+					("IslandsR", "Rect", 0.730, 0.5, 0.250, 0.250, 0, "flat", ScatterGrain, ScatterGrain, 80 + iWaterPercentChange),
 				]
 
 	regions.extend(base_regions)
@@ -863,7 +855,7 @@ def generatePlotTypes():
 
 	global plotgen
 	bBalanceTwoShores = False
-	if (geography_opt == 4 or geography_opt == 5) and m.getCustomMapOption(8) == 0:
+	if (geography_opt == 4 or geography_opt == 5) and m.getCustomMapOption(8) == 1:
 		bBalanceTwoShores = True
 
 	if bBalanceTwoShores:
@@ -1205,7 +1197,7 @@ class ResourceManager:
 		self.engine = CyEngine()
 		self.iW = map_obj.getGridWidth()
 		self.iH = map_obj.getGridHeight()
-		self.bDebugSignsEnabled = (map_obj.getCustomMapOption(10) == 1)
+		self.bDebugSignsEnabled = (map_obj.getCustomMapOption(9) == 1)
 
 	def _bonus_id(self, name):
 		return self.gc.getInfoTypeForString(name)
@@ -1300,6 +1292,35 @@ class ResourceManager:
 
 		return plots
 
+	def _get_team_start_radius_plots(self, iTeam, radius):
+		plots = []
+		used = {}
+
+		if radius < 0:
+			radius = 0
+
+		for iPlayer in range(self.gc.getMAX_CIV_PLAYERS()):
+			pPlayer = self.gc.getPlayer(iPlayer)
+			if pPlayer.isEverAlive() and pPlayer.getTeam() == iTeam:
+				pStart = pPlayer.getStartingPlot()
+				if pStart and not pStart.isNone():
+					sx = pStart.getX()
+					sy = pStart.getY()
+					for dx in range(-radius, radius + 1):
+						for dy in range(-radius, radius + 1):
+							nx = sx + dx
+							ny = sy + dy
+							if nx >= 0 and nx < self.iW and ny >= 0 and ny < self.iH:
+								if plotDistance(sx, sy, nx, ny) <= radius:
+									key = ny * self.iW + nx
+									if not used.has_key(key):
+										pPlot = self.map.plot(nx, ny)
+										if not pPlot.isNone():
+											used[key] = 1
+											plots.append(pPlot)
+
+		return plots
+
 	def _present_bonus_types(self, region_plots, bonusIDs):
 		wanted = {}
 		for iBonus in bonusIDs:
@@ -1313,11 +1334,27 @@ class ResourceManager:
 
 		return present.keys()
 
+	def _start_plot_lookup(self):
+		startLookup = {}
+		for i in range(self.gc.getMAX_CIV_PLAYERS()):
+			player = self.gc.getPlayer(i)
+			if player.isEverAlive():
+				pStart = player.getStartingPlot()
+				if pStart and not pStart.isNone():
+					startLookup[(pStart.getX(), pStart.getY())] = 1
+		return startLookup
+
+	def _is_player_start_plot(self, pPlot, startLookup):
+		if pPlot.isStartingPlot():
+			return True
+		return startLookup.has_key((pPlot.getX(), pPlot.getY()))
+
 	def _valid_bonus_plots(self, region_plots, iBonus):
 		validPlots = []
+		startLookup = self._start_plot_lookup()
 		for pPlot in region_plots:
 			if pPlot.getBonusType(-1) != -1: continue
-			if pPlot.isStartingPlot(): continue
+			if self._is_player_start_plot(pPlot, startLookup): continue
 			if not pPlot.canHaveBonus(iBonus, True): continue
 			validPlots.append(pPlot)
 		return validPlots
@@ -1349,12 +1386,129 @@ class ResourceManager:
 
 		return bonusInfo.isFlatlands()
 
+	def _is_bonus_appropriate_for_plot(self, bonus_id, pPlot):
+		"""
+		Checks if the bonus is physically compatible with the plot's terrain,
+		topography, and feature, ignoring proximity and latitude.
+		"""
+		info = self.gc.getBonusInfo(bonus_id)
+
+		if pPlot.isHills():
+			if not info.isHills(): return False
+		else:
+			if not info.isFlatlands(): return False
+
+		if not info.isTerrain(pPlot.getTerrainType()):
+			return False
+
+		iFeature = pPlot.getFeatureType()
+		if iFeature != -1:
+			if not info.isFeature(iFeature):
+				return False
+
+		return True
+
+	def place_bonus_in_radius(self, bonus_list, iTargetCount=1, iCopies=1, radius=5):
+		"""
+		Ensure target bonus types from bonus_list exist near each player start.
+		Uses plotDistance so diagonal radius checks match Civ's plot radius.
+		"""
+		if iTargetCount < 1: iTargetCount = 1
+		if iCopies < 1: iCopies = 1
+
+		ids = []
+		for b in bonus_list:
+			ids.append(self._bonus_id(b))
+
+		players = []
+		startLookup = self._start_plot_lookup()
+		for i in range(self.gc.getMAX_CIV_PLAYERS()):
+			player = self.gc.getPlayer(i)
+			if player.isEverAlive():
+				pStart = player.getStartingPlot()
+				if pStart and not pStart.isNone():
+					players.append((player.getID(), pStart.getX(), pStart.getY()))
+
+		for (pid, sx, sy) in players:
+			present = {}
+
+			for dx in range(-radius, radius + 1):
+				for dy in range(-radius, radius + 1):
+					nx, ny = sx + dx, sy + dy
+					if 0 <= nx < self.iW and 0 <= ny < self.iH:
+						if plotDistance(sx, sy, nx, ny) <= radius:
+							pPlot = self.map.plot(nx, ny)
+							iBonus = pPlot.getBonusType(TeamTypes.NO_TEAM)
+							if iBonus in ids:
+								present[iBonus] = 1
+
+			iPresent = len(present.keys())
+			if iPresent >= iTargetCount:
+				print "IB radius bonus skipped player %d. Found %d existing bonus types" % (pid, iPresent)
+				continue
+
+			missing_ids = []
+			for iBonus in ids:
+				if not present.has_key(iBonus):
+					missing_ids.append(iBonus)
+
+			missing_ids = self._shuffle_list(missing_ids, "IB Radius Bonus Type")
+			iNeededTypes = iTargetCount - iPresent
+			if iNeededTypes > len(missing_ids): iNeededTypes = len(missing_ids)
+
+			for iType in range(iNeededTypes):
+				chosen_id = missing_ids[iType]
+				placed = 0
+
+				for iCopy in range(iCopies):
+					tier1_plots = []
+					for dx in range(-radius, radius + 1):
+						for dy in range(-radius, radius + 1):
+							nx, ny = sx + dx, sy + dy
+							if 0 <= nx < self.iW and 0 <= ny < self.iH:
+								if plotDistance(sx, sy, nx, ny) <= radius:
+									pPlot = self.map.plot(nx, ny)
+									if self._is_player_start_plot(pPlot, startLookup) or pPlot.getBonusType(-1) != -1: continue
+									if pPlot.isWater() or pPlot.isPeak(): continue
+
+									if self._is_bonus_appropriate_for_plot(chosen_id, pPlot):
+										tier1_plots.append(pPlot)
+
+					target_plot = None
+					if len(tier1_plots) > 0:
+						target_plot = tier1_plots[self.dice.get(len(tier1_plots), "IB Radius T1")]
+					else:
+						emergency_plots = []
+						for dx in range(-radius, radius + 1):
+							for dy in range(-radius, radius + 1):
+								nx, ny = sx + dx, sy + dy
+								if 0 <= nx < self.iW and 0 <= ny < self.iH:
+									if plotDistance(sx, sy, nx, ny) <= radius:
+										pPlot = self.map.plot(nx, ny)
+										if not pPlot.isWater() and not pPlot.isPeak() and not self._is_player_start_plot(pPlot, startLookup):
+											if pPlot.getBonusType(-1) == -1:
+												emergency_plots.append(pPlot)
+
+						if len(emergency_plots) > 0:
+							target_plot = emergency_plots[self.dice.get(len(emergency_plots), "IB Radius Emergency")]
+
+					if target_plot:
+						target_plot.setBonusType(chosen_id)
+						bonus_name = self.gc.getBonusInfo(chosen_id).getType()
+						self._debug_sign(target_plot, "IB radius " + bonus_name + " P" + str(pid))
+						print "IB radius placed %s for player %d at (%d, %d)" % (bonus_name, pid, target_plot.getX(), target_plot.getY())
+						placed += 1
+
+				if placed < iCopies:
+					print "IB radius placed only %d of %d copies for player %d" % (placed, iCopies, pid)
+
 	def _fallback_bonus_plots(self, region_plots, iBonus, bMatchPlotType):
 		bWaterBonus = self._bonus_is_water(iBonus)
 		fallbackPlots = []
+		startLookup = self._start_plot_lookup()
 		for pPlot in region_plots:
 			if pPlot.getBonusType(-1) != -1: continue
-			if pPlot.isStartingPlot(): continue
+			if self._is_player_start_plot(pPlot, startLookup): continue
 			if bMatchPlotType:
 				if not self._bonus_matches_plot_type(pPlot, iBonus): continue
 			else:
@@ -1400,57 +1554,73 @@ class ResourceManager:
 
 		return placed
 
-	def place_balanced_team_resource(self, iTeam, bonusNames, iTargetCount, iCopies):
+	def _wipe_bonus_types_in_plots(self, region_plots, bonusIDs, regionName):
+		removeLookup = {}
+		for iBonus in bonusIDs:
+			removeLookup[iBonus] = 1
+
+		iRemoved = 0
+		for pPlot in region_plots:
+			iBonus = pPlot.getBonusType(-1)
+			if removeLookup.has_key(iBonus):
+				self._debug_sign(pPlot, "IB removed " + self._bonus_name_from_id(iBonus) + " in " + regionName)
+				pPlot.setBonusType(-1)
+				iRemoved += 1
+
+		if iRemoved > 0:
+			print "IB wiped %d listed bonuses in %s" % (iRemoved, regionName)
+		return iRemoved
+
+	def place_balanced_team_resource(self, iTeam, bonusNames, iTargetCount, iCopies, bPlaceNear=False, radius=5):
+		# Replaces the listed bonus group inside one team's half-map, then
+		# places a random subset back into that team region.  This keeps each
+		# team supplied from the same resource group without requiring the same
+		# exact bonus types on every side.
+		#
+		# iTeam: team id from teamHalfMap.
+		# bonusNames: list of XML bonus type names eligible for this group.
+		# iTargetCount: number of different bonus types to attempt for the team.
+		# iCopies: number of copies to place for each selected bonus type.
+		# bPlaceNear/radius: if set, place inside player start radii instead of
+		# the full team half-map after wiping the full region.
 		bonusIDs = self._bonus_ids_from_names(bonusNames)
-		region_plots = self._get_team_region_plots(iTeam)
 		regionName = "team " + str(iTeam)
+		wipeRegionName = regionName
+
+		# Always wipe the full team region so the original map generator cannot
+		# leave an uneven advantage from this bonus group behind.
+		wipe_plots = self._get_team_region_plots(iTeam)
+		self._wipe_bonus_types_in_plots(wipe_plots, bonusIDs, wipeRegionName)
+
+		if bPlaceNear:
+			# Semi-strategic balancing uses the tighter start radius so every
+			# player on the team has practical access instead of only a remote
+			# resource somewhere in the team's half-map.
+			region_plots = self._get_team_start_radius_plots(iTeam, radius)
+			regionName = regionName + " near starts"
+		else:
+			region_plots = wipe_plots
 		iPlayerCount = self._get_player_count_for_team(iTeam)
 
 		if len(region_plots) == 0:
 			print "IB balance found no plots for %s" % regionName
 			return 0
 
-		present = self._present_bonus_types(region_plots, bonusIDs)
-		iPresent = len(present)
+		bonusIDs = self._shuffle_list(bonusIDs, "IB Region Bonus Types")
+		iNeeded = iTargetCount
+		if iNeeded > len(bonusIDs): iNeeded = len(bonusIDs)
 
-		if iPresent > iTargetCount:
-			excess = self._shuffle_list(present, "IB Region Bonus Excess Types")
-			iRemoveCount = iPresent - iTargetCount
-			removeLookup = {}
-			for i in range(iRemoveCount):
-				removeLookup[excess[i]] = 1
-
-			for pPlot in region_plots:
-				iBonus = pPlot.getBonusType(-1)
-				if removeLookup.has_key(iBonus):
-					self._debug_sign(pPlot, "IB removed " + self._bonus_name_from_id(iBonus) + " in " + regionName)
-					pPlot.setBonusType(-1)
-
-			present = self._present_bonus_types(region_plots, bonusIDs)
-			return len(present)
-
-		if iPresent == iTargetCount:
-			return iPresent
-
-		presentLookup = {}
-		for iBonus in present:
-			presentLookup[iBonus] = 1
-
-		missing = []
-		for iBonus in bonusIDs:
-			if not presentLookup.has_key(iBonus):
-				missing.append(iBonus)
-
-		missing = self._shuffle_list(missing, "IB Region Bonus Missing Types")
-		iNeeded = iTargetCount - iPresent
-
+		# Choose up to iTargetCount different resource types from the group, then
+		# place iCopies of each through the normal/relaxed/fallback placement path.
+		iAttempted = 0
 		for i in range(iNeeded):
-			if i >= len(missing): break
-			iBonus = missing[i]
+			iBonus = bonusIDs[i]
 			self._place_bonus_copies(region_plots, iBonus, iCopies, regionName, self._bonus_name_from_id(iBonus), iPlayerCount)
+			iAttempted += 1
 
-		present = self._present_bonus_types(region_plots, bonusIDs)
-		return len(present)
+		# Return the number of bonus types attempted, not the number of copies
+		# successfully placed.
+		return iAttempted
 
 
 def normalizeAddExtras():
@@ -1462,39 +1632,43 @@ def normalizeAddExtras():
 	# Instantiate the Generalized Manager
 	rm = ResourceManager(map, gc, dice)
 	
-	iResourceOption = map.getCustomMapOption(9)
-	iTeamerBalancingOption = map.getCustomMapOption(8)
-	
-	# Vanilla balancing option
-	if iResourceOption ==1:
-		balancer.normalizeAddExtras()
+	bTeamerBalancingOption = map.getCustomMapOption(8)
 	
 	# bTeamPlacement is our global variable from the start plot logic
-	if bTeamPlacement and iTeamerBalancingOption == 0:
+	if bTeamPlacement and bTeamerBalancingOption == 1:
 		print "PY: Teamer balancing regional resource groups..."
 		
-		# 1. Global Swap
-		rm.swap_resources("BONUS_IVORY", None)
-		rm.swap_resources("BONUS_STONE", None)
-		rm.swap_resources("BONUS_MARBLE", None)
-		rm.swap_resources("BONUS_GOLD", None)
-		# 2. Place Balanced: Bonus list per team region
-		CalendarBonus = ["BONUS_SPICES", "BONUS_SUGAR", "BONUS_BANANA", "BONUS_DYE", "BONUS_INCENSE", "BONUS_SILK"]
-		Strategics = ["BONUS_IRON", "BONUS_COPPER", "BONUS_HORSE"] # This will be redundant if Balanced resources is on
+		Strategics = ["BONUS_IRON", "BONUS_COPPER", "BONUS_HORSE"]
 		SemiStrategics = ["BONUS_IVORY", "BONUS_STONE", "BONUS_MARBLE"]
 		PreciousMetals = ["BONUS_GOLD", "BONUS_SILVER", "BONUS_GEMS"]
 		EarlyHappiness = ["BONUS_FUR", "BONUS_WINE"]
+		CalendarBonus = ["BONUS_SPICES", "BONUS_SUGAR", "BONUS_BANANA", "BONUS_DYE", "BONUS_INCENSE", "BONUS_SILK"]
+		WaterBonus = ["BONUS_CRAB", "BONUS_WHALE"]
+
+		# 1. Global Swap
+		rm.swap_resources("BONUS_IVORY", None)
+		
+		# BonusList, # Types, Count, Radius
+		rm.place_bonus_in_radius(Strategics, 3, 1, radius=5)
+
+		# 2. Place Balanced: Bonus list per team region
 		sortedTeams = teamHalfMap.keys()
 		sortedTeams.sort()
 		for iTeam in sortedTeams:
 			iPlayerCount = rm._get_player_count_for_team(iTeam)
-			iCopies = int(0.5*iPlayerCount)
-			if iCopies < 1: iCopies = 1
-			rm.place_balanced_team_resource(iTeam, CalendarBonus, 4, iCopies+1)
-			rm.place_balanced_team_resource(iTeam, SemiStrategics, 3, iCopies)
-			rm.place_balanced_team_resource(iTeam, PreciousMetals, 2, iCopies+1)
-			rm.place_balanced_team_resource(iTeam, EarlyHappiness, 2, iCopies+1)
+			iRoundedDown = int(0.5*iPlayerCount)
+			iRoundedUp = int(0.5*iPlayerCount + 1)
+			if iRoundedDown < 1: iRoundedDown = 1
+			# iTeam, BonusList, # Types, Count
+			rm.place_balanced_team_resource(iTeam, CalendarBonus, 4, iRoundedDown)
+			rm.place_balanced_team_resource(iTeam, PreciousMetals, 3, iRoundedUp)
+			rm.place_balanced_team_resource(iTeam, EarlyHappiness, 2, iRoundedUp)
+			rm.place_balanced_team_resource(iTeam, WaterBonus, 2, iRoundedDown)
+			rm.place_balanced_team_resource(iTeam, SemiStrategics, 3, iRoundedDown, bPlaceNear=True, radius=4)
 
-	# Finalize by calling the engine's default extras (like Goody Huts)
-	CyPythonMgr().allowDefaultImpl()
+	else:
+		# Let the DLL handle normal extras when custom team balancing is off.
+		CyPythonMgr().allowDefaultImpl()
+
+	
 
