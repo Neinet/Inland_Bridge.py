@@ -215,10 +215,13 @@ def beforeGeneration():
 def _get_team_region_bounds(region, iW, iH):
 	xMin, xMax = 2, iW - 2
 	yMin, yMax = 2, iH - 2
+	iEdgeBuffer = 3
 
 	if region == 0:
 		yMin = northThreshold
+		yMax = iH - 1 - iEdgeBuffer
 	elif region == 1:
+		yMin = iEdgeBuffer
 		yMax = southThreshold
 	elif region == 2:
 		xMax = int(iW * 0.2)
@@ -236,8 +239,14 @@ def _get_team_region_bounds(region, iW, iH):
 
 	if xMin < 4: xMin = 4
 	if xMax > iW - 5: xMax = iW - 5
-	if yMin < 2: yMin = 2
-	if yMax > iH - 3: yMax = iH - 3
+	if region == 0 or region == 1:
+		if yMin < 0: yMin = 0
+		if yMax > iH - 1: yMax = iH - 1
+		if yMin > yMax:
+			yMin = yMax
+	else:
+		if yMin < 2: yMin = 2
+		if yMax > iH - 3: yMax = iH - 3
 
 	return (xMin, xMax, yMin, yMax)
 
@@ -289,6 +298,27 @@ def _assign_all_starting_plots():
 		region = teamHalfMap.get(tID, -1)
 		(teamXMin, teamXMax, teamYMin, teamYMax) = _get_team_region_bounds(region, iW, iH)
 		teamAreaID = _get_largest_land_area_in_bounds(map, teamXMin, teamXMax, teamYMin, teamYMax)
+
+		if region == 0 or region == 1:
+			availXMin = teamXMin
+			availXMax = teamXMax
+			availYMin = teamYMin
+			availYMax = teamYMax
+		else:
+			availXMin = teamXMin + 3
+			availXMax = teamXMax - 3
+			availYMin = teamYMin + 3
+			availYMax = teamYMax - 3
+		if availXMin > availXMax:
+			availXMin = teamXMin
+			availXMax = teamXMax
+		if availYMin > availYMax:
+			availYMin = teamYMin
+			availYMax = teamYMax
+		if availXMin < 0: availXMin = 0
+		if availXMax > iW - 1: availXMax = iW - 1
+		if availYMin < 0: availYMin = 0
+		if availYMax > iH - 1: availYMax = iH - 1
 		
 		# RANDOMIZE SLICES
 		# We create a list of indices and shuffle them to assign horizontal positions
@@ -309,12 +339,8 @@ def _assign_all_starting_plots():
 			player.AI_updateFoundValues(True)
 
 			# --- SEARCH BOX CALCULATION ---
-			xMin, xMax = teamXMin, teamXMax
-			yMin, yMax = teamYMin, teamYMax
-
-			# Slice Logic (Even Distribution)
-			availXMin, availXMax = teamXMin, teamXMax
-			availYMin, availYMax = teamYMin, teamYMax
+			xMin, xMax = availXMin, availXMax
+			yMin, yMax = availYMin, availYMax
 
 			sliceIdx = sliceOrder[i]
 			fullXMin, fullXMax = xMin, xMax
@@ -337,18 +363,30 @@ def _assign_all_starting_plots():
 				sliceWidth = (availXMax - availXMin) / numInTeam
 				fullXMin = availXMin + (sliceIdx * sliceWidth)
 				fullXMax = fullXMin + sliceWidth
+				if fullXMin == teamXMin:
+					fullXMin += 3
+				if fullXMax == teamXMax:
+					fullXMax -= 3
+				fullYMin = availYMin
+				fullYMax = availYMax
 				xMin = fullXMin
 				xMax = fullXMax
-			
-			# Add overlap and clamp
-			xMin = max(4, xMin - 2)
-			xMax = min(iW - 5, xMax + 2)
-			yMin = max(2, yMin)
-			yMax = min(iH - 3, yMax)
-			fullXMin = max(4, fullXMin - 2)
-			fullXMax = min(iW - 5, fullXMax + 2)
-			fullYMin = max(2, fullYMin)
-			fullYMax = min(iH - 3, fullYMax)
+				yMin = fullYMin
+				yMax = fullYMax
+				if sliceWidth > 8:
+					iSliceMargin = 4
+					xMin = fullXMin + iSliceMargin
+					xMax = fullXMax - iSliceMargin
+
+			# Clamp without adding overlap between teammate slices.
+			if xMin < 0: xMin = 0
+			if xMax > iW - 1: xMax = iW - 1
+			if yMin < 0: yMin = 0
+			if yMax > iH - 1: yMax = iH - 1
+			if fullXMin < 0: fullXMin = 0
+			if fullXMax > iW - 1: fullXMax = iW - 1
+			if fullYMin < 0: fullYMin = 0
+			if fullYMax > iH - 1: fullYMax = iH - 1
 
 			searchBoxes = [(xMin, xMax, yMin, yMax)]
 			if region == 2 or region == 3:
@@ -400,6 +438,7 @@ def _assign_all_starting_plots():
 					for y in range(fullYMin, fullYMax + 1):
 						pPlot = map.plot(x, y)
 						if not pPlot.isWater() and not pPlot.isPeak():
+							if teamAreaID != -1 and pPlot.getArea() != teamAreaID: continue
 							tooClose = False
 							for (ax, ay) in assigned_plots:
 								if plotDistance(x, y, ax, ay) < 5:
