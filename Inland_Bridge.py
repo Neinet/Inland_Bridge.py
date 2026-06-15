@@ -1,14 +1,7 @@
 #
 #	FILE:	 Inland_Bridge.py
 #	AUTHOR:	 Aineias the Stymphalian
-#	PURPOSE: Inland_sea.py with a center bridge and multiplayer-friendly customizations.
-
-'''
-INLAND BRIDGE NOTES
-This mapscript was written based on Bob Thomas (Sirian)'s Inland_Sea.py.
-
-- AineiasSymph, 2026
-'''
+#	PURPOSE: Adapted from Bob Thomas (Sirian)'s Inland_Sea.py. Features several multiplayer-friendly customizations.
 
 from CvPythonExtensions import *
 import CvUtil
@@ -39,7 +32,7 @@ def isAdvancedMap():
 	return 1
 
 def getNumCustomMapOptions():
-	return 10
+	return 11
 
 def getCustomMapOptionName(argsList):
 	[iOption] = argsList
@@ -63,6 +56,8 @@ def getCustomMapOptionName(argsList):
 		return "Teamer Resource Balancing"
 	elif iOption == 9:
 		return "Debug Signs"
+	elif iOption == 10:
+		return "Land Food Across Map"
 	return ""
 
 def getNumCustomMapOptionValues(argsList):
@@ -77,6 +72,7 @@ def getNumCustomMapOptionValues(argsList):
 	elif iOption == 7: return 2 # Team Start (Start Together or Disabled)
 	elif iOption == 8: return 2 # Semistrategic resources
 	elif iOption == 9: return 2 # Debug Signs
+	elif iOption == 10: return 4 # Land Food Across Map
 	return 0
 
 def getCustomMapOptionDescAt(argsList):
@@ -117,6 +113,11 @@ def getCustomMapOptionDescAt(argsList):
 	elif iOption == 9: # Debug Signs
 		if iSelection == 0: return "Disabled"
 		return "Enabled"
+	elif iOption == 10: # Land Food Across Map
+		if iSelection == 0: return "Disabled"
+		elif iSelection == 1: return "1 per 4x4 tiles"
+		elif iSelection == 2: return "1 per 5x5 tiles"
+		return "1 per 6x6 tiles"
 	return ""
 
 def getCustomMapOptionDefault(argsList):
@@ -141,6 +142,8 @@ def getCustomMapOptionDefault(argsList):
 		return 1
 	elif iOption == 9: # Debug Signs
 		return 0
+	elif iOption == 10: # Land Food Across Map
+		return 2
 	return 0
 
 ########################################
@@ -1466,9 +1469,9 @@ class ResourceManager:
 			if player.isEverAlive():
 				pStart = player.getStartingPlot()
 				if pStart and not pStart.isNone():
-					players.append((player.getID(), pStart.getX(), pStart.getY()))
+					players.append((player.getID(), pStart.getX(), pStart.getY(), pStart.getArea()))
 
-		for (pid, sx, sy) in players:
+		for (pid, sx, sy, iStartArea) in players:
 			present = {}
 
 			for dx in range(-radius, radius + 1):
@@ -1477,6 +1480,7 @@ class ResourceManager:
 					if 0 <= nx < self.iW and 0 <= ny < self.iH:
 						if plotDistance(sx, sy, nx, ny) <= radius:
 							pPlot = self.map.plot(nx, ny)
+							if pPlot.getArea() != iStartArea: continue
 							iBonus = pPlot.getBonusType(TeamTypes.NO_TEAM)
 							if iBonus in ids:
 								present[iBonus] = 1
@@ -1507,6 +1511,7 @@ class ResourceManager:
 							if 0 <= nx < self.iW and 0 <= ny < self.iH:
 								if plotDistance(sx, sy, nx, ny) <= radius:
 									pPlot = self.map.plot(nx, ny)
+									if pPlot.getArea() != iStartArea: continue
 									if self._is_player_start_plot(pPlot, startLookup) or pPlot.getBonusType(-1) != -1: continue
 									if pPlot.isWater() or pPlot.isPeak(): continue
 
@@ -1524,6 +1529,7 @@ class ResourceManager:
 								if 0 <= nx < self.iW and 0 <= ny < self.iH:
 									if plotDistance(sx, sy, nx, ny) <= radius:
 										pPlot = self.map.plot(nx, ny)
+										if pPlot.getArea() != iStartArea: continue
 										if not pPlot.isWater() and not pPlot.isPeak() and not self._is_player_start_plot(pPlot, startLookup):
 											if pPlot.getBonusType(-1) == -1:
 												emergency_plots.append(pPlot)
@@ -1540,6 +1546,64 @@ class ResourceManager:
 
 				if placed < iCopies:
 					print "IB radius placed only %d of %d copies for player %d" % (placed, iCopies, pid)
+
+	def ensure_bonus_per_grid(self, bonusNames, iGridSize):
+		if iGridSize <= 0:
+			return
+
+		bonusIDs = self._bonus_ids_from_names(bonusNames)
+		bonusLookup = {}
+		for iBonus in bonusIDs:
+			bonusLookup[iBonus] = 1
+
+		startLookup = self._start_plot_lookup()
+		iBlocksChecked = 0
+		iBlocksSatisfied = 0
+		iPlaced = 0
+		iBlocked = 0
+
+		for xMin in range(0, self.iW, iGridSize):
+			for yMin in range(0, self.iH, iGridSize):
+				iBlocksChecked += 1
+				xMax = xMin + iGridSize
+				yMax = yMin + iGridSize
+				if xMax > self.iW: xMax = self.iW
+				if yMax > self.iH: yMax = self.iH
+
+				iExisting = 0
+				plots = []
+				for x in range(xMin, xMax):
+					for y in range(yMin, yMax):
+						pPlot = self.map.plot(x, y)
+						if bonusLookup.has_key(pPlot.getBonusType(-1)):
+							iExisting += 1
+						plots.append(pPlot)
+
+				if iExisting > 0:
+					iBlocksSatisfied += 1
+					continue
+
+				plots = self._shuffle_list(plots, "IB Map Food Plot Shuffle")
+				shuffledBonusIDs = self._shuffle_list(bonusIDs, "IB Map Food Bonus Shuffle")
+				bPlaced = False
+				for pPlot in plots:
+					if pPlot.getBonusType(-1) != -1: continue
+					if pPlot.isWater() or pPlot.isPeak(): continue
+					if self._is_player_start_plot(pPlot, startLookup): continue
+					for iBonus in shuffledBonusIDs:
+						if pPlot.canHaveBonus(iBonus, True):
+							pPlot.setBonusType(iBonus)
+							self._debug_sign(pPlot, "IB map food " + self._bonus_name_from_id(iBonus))
+							iPlaced += 1
+							bPlaced = True
+							break
+					if bPlaced:
+						break
+
+				if not bPlaced:
+					iBlocked += 1
+
+		print "IB map food scan: checked %d blocks, satisfied %d, placed %d, blocked %d" % (iBlocksChecked, iBlocksSatisfied, iPlaced, iBlocked)
 
 	def _fallback_bonus_plots(self, region_plots, iBonus, bMatchPlotType):
 		bWaterBonus = self._bonus_is_water(iBonus)
@@ -1672,6 +1736,8 @@ def normalizeAddExtras():
 	rm = ResourceManager(map, gc, dice)
 	
 	bTeamerBalancingOption = map.getCustomMapOption(8)
+	iMapFoodOption = map.getCustomMapOption(10)
+	LandFoodBonus = ["BONUS_WHEAT", "BONUS_RICE", "BONUS_CORN", "BONUS_COW", "BONUS_SHEEP", "BONUS_PIG", "BONUS_DEER", "BONUS_BANANA"]
 	
 	# bTeamPlacement is our global variable from the start plot logic
 	if bTeamPlacement and bTeamerBalancingOption == 1:
@@ -1688,7 +1754,7 @@ def normalizeAddExtras():
 		rm.swap_resources("BONUS_IVORY", None)
 		
 		# BonusList, # Types, Count, Radius
-		rm.place_bonus_in_radius(Strategics, 3, 1, radius=5)
+		rm.place_bonus_in_radius(Strategics, 3, 1, radius=4)
 
 		# 2. Place Balanced: Bonus list per team region
 		sortedTeams = teamHalfMap.keys()
@@ -1702,12 +1768,14 @@ def normalizeAddExtras():
 			rm.place_balanced_team_resource(iTeam, CalendarBonus, 4, iRoundedDown)
 			rm.place_balanced_team_resource(iTeam, PreciousMetals, 3, iRoundedUp)
 			rm.place_balanced_team_resource(iTeam, EarlyHappiness, 2, iRoundedUp)
-			rm.place_balanced_team_resource(iTeam, WaterBonus, 2, iRoundedDown)
+			# rm.place_balanced_team_resource(iTeam, WaterBonus, 2, iRoundedDown)
 			rm.place_balanced_team_resource(iTeam, SemiStrategics, 3, iRoundedDown, bPlaceNear=True, radius=4)
 
 	else:
 		# Let the DLL handle normal extras when custom team balancing is off.
 		CyPythonMgr().allowDefaultImpl()
 
-	
+	if iMapFoodOption != 0:
+		print "PY: Inland Bridge ensuring mapwide land food bonuses..."
+		rm.ensure_bonus_per_grid(LandFoodBonus, iMapFoodOption + 3)
 
