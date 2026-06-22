@@ -32,7 +32,7 @@ def isAdvancedMap():
 	return 1
 
 def getNumCustomMapOptions():
-	return 11
+	return 12
 
 def getCustomMapOptionName(argsList):
 	[iOption] = argsList
@@ -56,8 +56,10 @@ def getCustomMapOptionName(argsList):
 		return "Teamer Resource Balancing"
 	elif iOption == 9:
 		return "Debug Signs"
-	elif iOption == 10:
-		return "Land Food Across Map"
+        elif iOption == 10:
+    		return "Land Food Across Map"
+        elif iOption == 11:
+        	return "Reveal Start Area Radius"
 	return ""
 
 def getNumCustomMapOptionValues(argsList):
@@ -73,6 +75,7 @@ def getNumCustomMapOptionValues(argsList):
 	elif iOption == 8: return 2 # Semistrategic resources
 	elif iOption == 9: return 2 # Debug Signs
 	elif iOption == 10: return 4 # Land Food Across Map
+	elif iOption == 11: return 4  # Radius
 	return 0
 
 def getCustomMapOptionDescAt(argsList):
@@ -118,6 +121,12 @@ def getCustomMapOptionDescAt(argsList):
 		elif iSelection == 1: return "1 per 4x4 tiles"
 		elif iSelection == 2: return "1 per 5x5 tiles"
 		return "1 per 6x6 tiles"
+	elif iOption == 11:
+	    if iSelection == 0: return "Disabled"
+	    elif iSelection == 1: return "Radius 2"
+	    elif iSelection == 2: return "Radius 3"
+	    return "Radius 4"
+
 	return ""
 
 def getCustomMapOptionDefault(argsList):
@@ -144,6 +153,8 @@ def getCustomMapOptionDefault(argsList):
 		return 0
 	elif iOption == 10: # Land Food Across Map
 		return 2
+	elif iOption == 11:
+                return 0  # default = Disabled
 	return 0
 
 ########################################
@@ -1140,13 +1151,19 @@ class ISFeatureGenerator(CvMapGeneratorUtil.FeatureGenerator):
 				pPlot.setFeatureType(self.featureForest, self.getForestVarietyAtPlot(iX, iY))
 
 def addFeatures():
-	NiTextOut("Adding Features (Python Inland Sea) ...")
-	featuregen = ISFeatureGenerator()
-	featuregen.addFeatures()
-	map = CyMap()
-	if map.getCustomMapOption(6) == 0:
-		expandCoastToTwoTiles()
-	return 0
+    NiTextOut("Adding Features (Python Inland Sea) ...")
+    featuregen = ISFeatureGenerator()
+    featuregen.addFeatures()
+
+    cyMap = CyMap()
+
+
+
+    if cyMap.getCustomMapOption(6) == 0:
+        expandCoastToTwoTiles()
+
+    return 0
+
 
 def getRiverStartCardinalDirection(argsList):
 	pPlot = argsList[0]
@@ -1727,7 +1744,7 @@ class ResourceManager:
 def revealStartingArea(iRadius=3):
 	gc = CyGlobalContext()
 	map = CyMap()
-
+	
 	for iPlayer in range(gc.getMAX_CIV_PLAYERS()):
 		pPlayer = gc.getPlayer(iPlayer)
 
@@ -1763,7 +1780,15 @@ def normalizeAddExtras():
 	map.recalculateAreas()
 	# Instantiate the Generalized Manager
 	rm = ResourceManager(map, gc, dice)
-	
+	iRevealOption = map.getCustomMapOption(11)
+	iRevealRadius = 0
+
+	if iRevealOption == 1:
+		iRevealRadius = 2
+	elif iRevealOption == 2:
+		iRevealRadius = 3
+	elif iRevealOption == 3:
+		iRevealRadius = 4
 	bTeamerBalancingOption = map.getCustomMapOption(8)
 	iMapFoodOption = map.getCustomMapOption(10)
 	LandFoodBonus = ["BONUS_WHEAT", "BONUS_RICE", "BONUS_CORN", "BONUS_COW", "BONUS_SHEEP", "BONUS_PIG", "BONUS_DEER", "BONUS_BANANA"]
@@ -1807,5 +1832,6 @@ def normalizeAddExtras():
 	if iMapFoodOption != 0:
 		print "PY: Inland Bridge ensuring mapwide land food bonuses..."
 		rm.ensure_bonus_per_grid(LandFoodBonus, iMapFoodOption + 3)
-
-	revealStartingArea(3)
+	
+	if iRevealRadius > 0:
+		revealStartingArea(iRevealRadius)
