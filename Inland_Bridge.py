@@ -1724,7 +1724,36 @@ class ResourceManager:
 		# Return the number of bonus types attempted, not the number of copies
 		# successfully placed.
 		return iAttempted
+def revealStartingArea(iRadius=3):
+	gc = CyGlobalContext()
+	map = CyMap()
 
+	for iPlayer in range(gc.getMAX_CIV_PLAYERS()):
+		pPlayer = gc.getPlayer(iPlayer)
+
+		if not pPlayer.isEverAlive():
+			continue
+
+		pStart = pPlayer.getStartingPlot()
+		if pStart is None or pStart.isNone():
+			continue
+
+		iTeam = pPlayer.getTeam()
+		sx = pStart.getX()
+		sy = pStart.getY()
+
+		for dx in range(-iRadius, iRadius + 1):
+			for dy in range(-iRadius, iRadius + 1):
+				nx = sx + dx
+				ny = sy + dy
+
+				if nx < 0 or nx >= map.getGridWidth():
+					continue
+				if ny < 0 or ny >= map.getGridHeight():
+					continue
+
+				if plotDistance(sx, sy, nx, ny) <= iRadius:
+					map.plot(nx, ny).setRevealed(iTeam, True, False, -1)
 
 def normalizeAddExtras():
 	gc = CyGlobalContext()
@@ -1779,3 +1808,4 @@ def normalizeAddExtras():
 		print "PY: Inland Bridge ensuring mapwide land food bonuses..."
 		rm.ensure_bonus_per_grid(LandFoodBonus, iMapFoodOption + 3)
 
+	revealStartingArea(3)
