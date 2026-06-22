@@ -32,7 +32,7 @@ def isAdvancedMap():
 	return 1
 
 def getNumCustomMapOptions():
-	return 12
+	return 11
 
 def getCustomMapOptionName(argsList):
 	[iOption] = argsList
@@ -56,9 +56,9 @@ def getCustomMapOptionName(argsList):
 		return "Teamer Resource Balancing"
 	elif iOption == 9:
 		return "Debug Signs"
-        elif iOption == 10:
+    elif iOption == 10:
     		return "Land Food Across Map"
-        elif iOption == 11:
+    elif iOption == 11:
         	return "Reveal Start Area Radius"
 	return ""
 
@@ -126,7 +126,6 @@ def getCustomMapOptionDescAt(argsList):
 	    elif iSelection == 1: return "Radius 2"
 	    elif iSelection == 2: return "Radius 3"
 	    return "Radius 4"
-
 	return ""
 
 def getCustomMapOptionDefault(argsList):
@@ -153,8 +152,8 @@ def getCustomMapOptionDefault(argsList):
 		return 0
 	elif iOption == 10: # Land Food Across Map
 		return 2
-	elif iOption == 11:
-                return 0  # default = Disabled
+	elif iOption == 11: # default = Disabled
+		return 0  
 	return 0
 
 ########################################
@@ -1151,19 +1150,13 @@ class ISFeatureGenerator(CvMapGeneratorUtil.FeatureGenerator):
 				pPlot.setFeatureType(self.featureForest, self.getForestVarietyAtPlot(iX, iY))
 
 def addFeatures():
-    NiTextOut("Adding Features (Python Inland Sea) ...")
-    featuregen = ISFeatureGenerator()
-    featuregen.addFeatures()
-
-    cyMap = CyMap()
-
-
-
-    if cyMap.getCustomMapOption(6) == 0:
-        expandCoastToTwoTiles()
-
-    return 0
-
+	NiTextOut("Adding Features (Python Inland Sea) ...")
+	featuregen = ISFeatureGenerator()
+	featuregen.addFeatures()
+	map = CyMap()
+	if map.getCustomMapOption(6) == 0:
+		expandCoastToTwoTiles()
+	return 0
 
 def getRiverStartCardinalDirection(argsList):
 	pPlot = argsList[0]
@@ -1772,6 +1765,7 @@ def revealStartingArea(iRadius=3):
 				if plotDistance(sx, sy, nx, ny) <= iRadius:
 					map.plot(nx, ny).setRevealed(iTeam, True, False, -1)
 
+
 def normalizeAddExtras():
 	gc = CyGlobalContext()
 	map = CyMap()
@@ -1832,6 +1826,5 @@ def normalizeAddExtras():
 	if iMapFoodOption != 0:
 		print "PY: Inland Bridge ensuring mapwide land food bonuses..."
 		rm.ensure_bonus_per_grid(LandFoodBonus, iMapFoodOption + 3)
-	
 	if iRevealRadius > 0:
 		revealStartingArea(iRevealRadius)
