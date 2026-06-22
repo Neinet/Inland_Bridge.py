@@ -56,10 +56,10 @@ def getCustomMapOptionName(argsList):
 		return "Teamer Resource Balancing"
 	elif iOption == 9:
 		return "Debug Signs"
-    elif iOption == 10:
-    		return "Land Food Across Map"
-    elif iOption == 11:
-        	return "Reveal Start Area Radius"
+	elif iOption == 10:
+    	return "Land Food Across Map"
+	elif iOption == 11:
+        return "Reveal Start Area Radius"
 	return ""
 
 def getNumCustomMapOptionValues(argsList):
