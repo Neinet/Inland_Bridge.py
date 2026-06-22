@@ -35,32 +35,32 @@ def getNumCustomMapOptions():
 	return 11
 
 def getCustomMapOptionName(argsList):
-	[iOption] = argsList
-	if iOption == 0:
-		return "Climate Details"
-	elif iOption == 1:
-		return "Hemisphere Option"
-	elif iOption == 2:
-		return "Axial Tilt"
-	elif iOption == 3:
-		return "World Wrap"
-	elif iOption == 4:
-		return "Geography"
-	elif iOption == 5:
-		return "Islands"
-	elif iOption == 6:
-		return "Two-tile Coasts"
-	elif iOption == 7:
-		return "Team Start"
-	elif iOption == 8:
-		return "Teamer Resource Balancing"
-	elif iOption == 9:
-		return "Debug Signs"
-	elif iOption == 10:
-    	return "Land Food Across Map"
-	elif iOption == 11:
+    [iOption] = argsList
+    if iOption == 0:
+        return "Climate Details"
+    elif iOption == 1:
+        return "Hemisphere Option"
+    elif iOption == 2:
+        return "Axial Tilt"
+    elif iOption == 3:
+        return "World Wrap"
+    elif iOption == 4:
+        return "Geography"
+    elif iOption == 5:
+        return "Islands"
+    elif iOption == 6:
+        return "Two-tile Coasts"
+    elif iOption == 7:
+        return "Team Start"
+    elif iOption == 8:
+        return "Teamer Resource Balancing"
+    elif iOption == 9:
+        return "Debug Signs"
+    elif iOption == 10:
+        return "Land Food Across Map"
+    elif iOption == 11:
         return "Reveal Start Area Radius"
-	return ""
+    return ""
 
 def getNumCustomMapOptionValues(argsList):
 	[iOption] = argsList
